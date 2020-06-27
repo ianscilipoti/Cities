@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using EPPZ.Geometry.Model;
 
-public interface ISubDivScheme
+public interface ISubDivScheme <Subject> where Subject : Subdividable
 {
-    List<ISubdividable> GetChildren(ISubdividable parent, out List<Vector4> edges);
+    List<Subject> GetChildren(Subject parent);
 }

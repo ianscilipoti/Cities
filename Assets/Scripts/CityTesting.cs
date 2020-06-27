@@ -21,10 +21,10 @@ public class CityTesting : MonoBehaviour
             float rnd = Random.Range(1f, 1.5f);
             bPoly.Add(new Vector2((int)(cos * 8f * rnd), (int)(sin * 8f * rnd)));
         }
-        city = new City(bPoly.ToArray());
-        city.SubdivideR();
+        //city = new City(bPoly.ToArray());
+        //city.SubdivideR();
 
-        roadGraph = city.GetBoundaryGraph();
+        //roadGraph = city.GetBoundaryGraph();
 
     }
 

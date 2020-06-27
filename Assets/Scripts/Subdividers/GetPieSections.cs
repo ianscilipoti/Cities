@@ -8,20 +8,18 @@ using ClipperLib;
 using Path = System.Collections.Generic.List<ClipperLib.IntPoint>;
 using Paths = System.Collections.Generic.List<System.Collections.Generic.List<ClipperLib.IntPoint>>;
 
-public class GetPieSections : ISubDivScheme
+public class GetPieSections : ISubDivScheme<SubdividableEdgeLoop>
 {
-    public GetPieSections () {
-    }
-
-    public List<ISubdividable> GetChildren(ISubdividable parent, out List<Vector4> edges)
+    public List<SubdividableEdgeLoop> GetChildren(SubdividableEdgeLoop parent)
     {
         //generate points of interest
         List<Vector2> points = new List<Vector2>();
-        Vector2 centroid = parent.centroid;
+        Polygon parentPoly = parent.GetPolygon();
+        Vector2 centroid = parentPoly.centroid;
         List<Vector2> edgeCrossings = new List<Vector2>();
-        parent.EnumerateEdges((Edge edge) =>
+        parent.EnumerateEdges((EdgeLoopEdge edge) =>
         {
-            Vector2 edgeCrossing = Vector2.Lerp(edge.a, edge.b, Random.Range(0.4f, 0.6f));
+            Vector2 edgeCrossing = Vector2.Lerp(edge.a.pt, edge.b.pt, Random.Range(0.4f, 0.6f));
             edgeCrossings.Add(edgeCrossing);
             points.Add(HelperFunctions.ScaleFrom(edgeCrossing, centroid, 5));
         });
@@ -40,10 +38,10 @@ public class GetPieSections : ISubDivScheme
         TriangleNet.Meshing.GenericMesher mesher = new TriangleNet.Meshing.GenericMesher();
         TriangleNet.Meshing.IMesh mesh = mesher.Triangulate(polygon);
 
-        Path polygonAsClip = parent.ClipperPath(HelperFunctions.clipperScale);
+        Path polygonAsClip = parentPoly.ClipperPath(HelperFunctions.clipperScale);
         Paths solution = new Paths();
 
-        List<ISubdividable> children = new List<ISubdividable>();
+        List<SubdividableEdgeLoop> children = new List<SubdividableEdgeLoop>();
 
         foreach (TriangleNet.Topology.Triangle tri in mesh.Triangles) 
         {
@@ -66,16 +64,16 @@ public class GetPieSections : ISubDivScheme
             }
         }
 
-        foreach (Path solutionPath in solution) 
-        {
-            children.Add(parent.GetNextChild(ClipperAddOns.PointsFromClipperPath(solutionPath, HelperFunctions.clipperScale)));
-        }
+        //foreach (Path solutionPath in solution) 
+        //{
+        //    children.Add(parent.GetNextChild(ClipperAddOns.PointsFromClipperPath(solutionPath, HelperFunctions.clipperScale)));
+        //}
 
-        edges = new List<Vector4>();
-        foreach (Vector2 crossing in edgeCrossings)
-        {
-            edges.Add(new Vector4(crossing.x, crossing.y, centroid.x, centroid.y));
-        }
+        //edges = new List<Vector4>();
+        //foreach (Vector2 crossing in edgeCrossings)
+        //{
+        //    edges.Add(new Vector4(crossing.x, crossing.y, centroid.x, centroid.y));
+        //}
 
         return children;
     }

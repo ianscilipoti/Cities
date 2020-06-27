@@ -4,14 +4,14 @@ using UnityEngine;
 using Polygon = EPPZ.Geometry.Model.Polygon;
 
 
-public abstract class CityRegion : ISubdividable
+public abstract class CityRegion : SubdividableEdgeLoop
 {
     public WealthLevel wealth { get; set; }
     public string descriptor { get; set; }
 
     public City rootCity;
 
-    public CityRegion(Vector2[] boundary, City rootCity, bool isSubdividable) : base(boundary, isSubdividable)
+    public CityRegion(EdgeLoopEdge[] edges, City rootCity, bool isSubdividable) : base(edges, isSubdividable)
     {
         this.rootCity = rootCity;
     }
