@@ -32,7 +32,6 @@ public class LinkedGraphVertex
         return (IEnumerable<LinkedGraphEdge>)connections;
     }
 
-
     public int NumConnections()
     {
         return connections.Count;

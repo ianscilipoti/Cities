@@ -27,6 +27,9 @@ namespace TriangleNet
         // Start is called before the first frame update
         void Start()
         {
+            print( HelperFunctions.AngleBetween(Vector2.up, Vector2.left) * Mathf.Rad2Deg);
+            return;
+
             //Random.seed = 0;
             int numPoints = 10;
             List<Vector2> bPoly = new List<Vector2>();

@@ -11,6 +11,19 @@ public class HelperFunctions
         
     //}
 
+    //get the CCW angle in radians between a and b
+    public static float AngleBetween(Vector2 a, Vector2 b)
+    {
+        float dot = Vector2.Dot(a, b);      // dot product between [x1, y1] and [x2, y2]
+        float det = a.x * b.y - a.y * b.x;      // determinant
+        float angle = Mathf.Atan2(det, dot);
+        if (angle < 0)
+        {
+            angle += Mathf.PI * 2;
+        }
+        return angle;
+    }
+
     public static Vector2 ScaleFrom(Vector2 vec, Vector2 from, float factor)
     {
         Vector2 fromTo = (vec - from).normalized;
