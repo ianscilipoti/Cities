@@ -34,15 +34,15 @@ public class TestSegmentGraph : MonoBehaviour
 
         //graph.AddSegment(new Vector2(-5f, 10f), new Vector2(5f, 10f), 0f);
         EdgeLoopEdgeFactory factory = new EdgeLoopEdgeFactory();
-        for (int i = 0; i < 20; i++)
-        {
-            LinkedGraph<EdgeLoopEdge>.ConnectNewEdge(new Vector2(0, i/2f), new Vector2(10, i / 2f), factory, edges);
-        }
+        //for (int i = 0; i < 20; i++)
+        //{
+        //    LinkedGraph<EdgeLoopEdge>.ConnectNewEdge(new Vector2(0, i/2f), new Vector2(10, i / 2f), factory, edges);
+        //}
 
-        for (int i = 0; i < 20; i++)
-        {
-            LinkedGraph<EdgeLoopEdge>.ConnectNewEdge(new Vector2(i / 2f, 0), new Vector2(i / 2f, 10), factory, edges);
-        }
+        //for (int i = 0; i < 20; i++)
+        //{
+        //    LinkedGraph<EdgeLoopEdge>.ConnectNewEdge(new Vector2(i / 2f, 0), new Vector2(i / 2f, 10), factory, edges);
+        //}
 
         //LinkedGraphEdge.ConnectNewEdge(Vector2.zero, new Vector2(0, 10), factory, edges);
 
@@ -57,11 +57,19 @@ public class TestSegmentGraph : MonoBehaviour
 
         LinkedGraphVertex mid = new LinkedGraphVertex(Vector2.zero);
 
-        //List<LinkedGraphEdge> knownEdges = new List<EdgeLoopEdge>();
+        EdgeLoopEdge b = LinkedGraph<EdgeLoopEdge>.AddEdge(bl, br, factory, edges);
+        EdgeLoopEdge r = LinkedGraph<EdgeLoopEdge>.AddEdge(br, tr, factory, edges);
+        EdgeLoopEdge t = LinkedGraph<EdgeLoopEdge>.AddEdge(tl, tr, factory, edges);
+        EdgeLoopEdge l = LinkedGraph<EdgeLoopEdge>.AddEdge(tl, bl, factory, edges);
 
-        //EdgeLoopEdge b = EdgeLoopEdge.AddEdge(bl, br, factory, knownEdges);
+        EdgeLoopEdge blm = LinkedGraph<EdgeLoopEdge>.AddEdge(bl, mid, factory, edges);
+        EdgeLoopEdge brm = LinkedGraph<EdgeLoopEdge>.AddEdge(br, mid, factory, edges);
+        EdgeLoopEdge trm = LinkedGraph<EdgeLoopEdge>.AddEdge(tr, mid, factory, edges);
+        EdgeLoopEdge tlm = LinkedGraph<EdgeLoopEdge>.AddEdge(tl, mid, factory, edges);
 
+        SubdividableEdgeLoop squareLoop = new SubdividableEdgeLoop(new EdgeLoopEdge[] {b,r,t,l}, true);
 
+        List<EdgeLoop> children = squareLoop.GetInteriorEdgeLoops();
 
         print(edges.Count);
 

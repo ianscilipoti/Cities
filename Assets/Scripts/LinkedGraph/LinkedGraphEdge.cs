@@ -23,6 +23,20 @@ public class LinkedGraphEdge
         segRef.b = b.pt;
     }
 
+    public LinkedGraphVertex GetSharedVertex (LinkedGraphEdge other)
+    {
+        if (a == other.a || a == other.b)
+        {
+            return a;
+        }
+        else if (b == other.a || b == other.b)
+        {
+            return b;
+        }
+
+        return null;
+    }
+
     public LinkedGraphVertex GetOppositeVertex(LinkedGraphVertex vertex)
     {
         if (a != vertex && b != vertex)
@@ -45,52 +59,96 @@ public class LinkedGraphEdge
 
     public bool isConnectedTo (LinkedGraphEdge other)
     {
-        if (a == other.a || a == other.b || b == other.a || b == other.b)
-        {
-            return true;
-        }
-        return false;
+        return GetSharedVertex(other) != null;
     }
 
-    public List<EdgeType> CollectEdges <EdgeType> (bool allConsecutive, SearchFilter filter, HashSet<EdgeType> mask) where EdgeType : LinkedGraphEdge
+    public List<EdgeType> CollectEdges <EdgeType> (bool allConsecutive, SearchFilter filter) where EdgeType : LinkedGraphEdge
     {
         List<EdgeType> collectedEdges = new List<EdgeType>();
-        List<LinkedGraphEdge> seenEdges = new List<LinkedGraphEdge>();
+        HashSet<LinkedGraphEdge> seenEdges = new HashSet<LinkedGraphEdge>();
 
-        CollectEdgesR(collectedEdges, seenEdges, allConsecutive, filter, mask);
+        //List<LinkedGraphEdge> frontier = new List<LinkedGraphEdge>();
+
+        Stack<LinkedGraphEdge> frontier = new Stack<LinkedGraphEdge>();
+        frontier.Push(this);
+
+        while (frontier.Count > 0)
+        {
+            LinkedGraphEdge next = frontier.Pop();
+
+            EdgeType thisInstance = null;
+            bool spread = true;
+            if (next is EdgeType)
+            {
+                thisInstance = (EdgeType)next;
+            }
+
+            bool passesFilter = filter == null || filter(next);
+
+            if (thisInstance == null)
+            {
+                if (allConsecutive)
+                {
+                    spread = false; 
+                }
+            }
+            else if (passesFilter)
+            {
+                collectedEdges.Add(thisInstance);
+            }
+            else if (allConsecutive)//if all the passing edge should be attached, or consecutive, then if this fails, return.
+            {
+                spread = false;
+            }
+
+            seenEdges.Add(next);
+
+            if (spread)
+            {
+                next.EnumerateNeighborEdges((LinkedGraphEdge edge) =>
+                {
+                    if (!seenEdges.Contains(edge) && !frontier.Contains(edge))
+                    {
+                        frontier.Push(edge);
+                    }
+                });
+            }
+        }
+
+        //CollectEdgesR(collectedEdges, seenEdges, allConsecutive, filter, mask);
 
         return collectedEdges;
     }
 
-    private void CollectEdgesR <EdgeType> (List<EdgeType> collectedEdges, List<LinkedGraphEdge> seenEdges, bool allConsecutive, SearchFilter filter, HashSet<EdgeType> mask) where EdgeType : LinkedGraphEdge
-    {
-        EdgeType thisInstance = null;
-        if (this is EdgeType)
-        {
-            thisInstance = (EdgeType)this;
-        }
+    //private void CollectEdgesR <EdgeType> (List<EdgeType> collectedEdges, List<LinkedGraphEdge> seenEdges, bool allConsecutive, SearchFilter filter, HashSet<EdgeType> mask) where EdgeType : LinkedGraphEdge
+    //{
+    //    EdgeType thisInstance = null;
+    //    if (this is EdgeType)
+    //    {
+    //        thisInstance = (EdgeType)this;
+    //    }
 
-        if ((thisInstance == null && allConsecutive) || collectedEdges.Contains(thisInstance) || seenEdges.Contains(this))
-        {
-            return;
-        }
-        else if ((filter == null || filter(this)) && (mask == null || mask.Contains(thisInstance)))
-        {
-            collectedEdges.Add(thisInstance);
-        }
-        else if (allConsecutive)//if all the passing edge should be attached, or consecutive, then if this fails, return.
-        {
-            return;
-        }
+    //    if ((thisInstance == null && allConsecutive) || collectedEdges.Contains(thisInstance) || seenEdges.Contains(this))
+    //    {
+    //        return;
+    //    }
+    //    else if ((filter == null || filter(this)) && (mask == null || mask.Contains(thisInstance)))
+    //    {
+    //        collectedEdges.Add(thisInstance);
+    //    }
+    //    else if (allConsecutive)//if all the passing edge should be attached, or consecutive, then if this fails, return.
+    //    {
+    //        return;
+    //    }
 
-        EnumerateNeighborEdges((LinkedGraphEdge edge) =>
-        {
-            if (!seenEdges.Contains(edge))
-            {
-                edge.CollectEdgesR(collectedEdges, seenEdges, allConsecutive, filter, mask); 
-            }
-        }); 
-    }
+    //    EnumerateNeighborEdges((LinkedGraphEdge edge) =>
+    //    {
+    //        if (!seenEdges.Contains(edge))
+    //        {
+    //            edge.CollectEdgesR(collectedEdges, seenEdges, allConsecutive, filter, mask); 
+    //        }
+    //    }); 
+    //}
 
     public void EnumerateNeighborEdges(System.Action<LinkedGraphEdge> action)
     {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using EPPZ.Geometry.Model;
-using System.Linq;
+
 
 public class EdgeLoop
 {
@@ -24,7 +24,7 @@ public class EdgeLoop
     {
         for (int i = 0; i < edges.Count; i ++)
         {
-            int nextIndex = (i + 1) % (edges.Count - 1);
+            int nextIndex = (i + 1) % (edges.Count);
             if (!edges[i].isConnectedTo(edges[nextIndex]))
             {
                 return false;
@@ -39,7 +39,7 @@ public class EdgeLoop
     }
 
     //search delegate
-    private bool EdgeWithinLoop (LinkedGraphEdge theEdge)
+    protected bool EdgeWithinLoop (LinkedGraphEdge theEdge)
     {
         Polygon poly = GetPolygon();
         if ((poly.PermiterContainsPoint(theEdge.a.pt) || poly.ContainsPoint(theEdge.a.pt)) &&
@@ -66,83 +66,13 @@ public class EdgeLoop
             int offset = indexOfFirst;//now that we know the offset, we must see all edges match with same offset
             for (int i = 0; i < edges.Count; i ++)
             {
-                if (edges[i] != other.edges[(i + offset) % (edges.Count - 1)])
+                if (edges[i] != other.edges[(i + offset) % edges.Count])
                 {
                     return false;
                 }
             }
         }
         return true;
-    }
-
-    public List<EdgeLoop> GetInteriorEdgeLoops ()
-    {
-
-        List<EdgeLoop> foundLoops = new List<EdgeLoop>();;
-
-        //starting at the first edge, do a search outward to collect all edges that are within 
-        List<EdgeLoopEdge> allEdges = edges[0].CollectEdges<EdgeLoopEdge>(true, EdgeWithinLoop, null); //exterior and interior
-        List<EdgeLoopEdge> exteriorEdges = edges;
-
-        //get all edges that make up the interior of the loop
-        List<EdgeLoopEdge> interiorEdges = allEdges.Except(exteriorEdges).ToList();
-
-        //clean up edges that can't be part of polygons
-        for (int i = interiorEdges.Count - 1; i >= 0; i --)
-        {
-            EdgeLoopEdge edge = interiorEdges[i];
-            if(edge.a.NumConnections() <= 1 || edge.b.NumConnections() <= 1)
-            {
-                interiorEdges.Remove(edge);
-                Debug.LogWarning("Detached an edge while getting interior edge loops");
-            }
-        }
-
-        //keep track of the loops we've already found for each edge
-        Dictionary<EdgeLoopEdge, List<EdgeLoop>> edgeLoopCounts = new Dictionary<EdgeLoopEdge, List<EdgeLoop>>();
-
-        foreach (EdgeLoopEdge edge in interiorEdges)
-        {
-            edgeLoopCounts.Add(edge, new List<EdgeLoop>());
-        }
-
-        foreach (EdgeLoopEdge edge in interiorEdges)
-        {
-            if (edgeLoopCounts[edge].Count == 2)
-            {
-                continue;//we've found both loops associated with this edge
-            }
-            EdgeLoop ccwLoop = new EdgeLoop(edge.GetLocalLoop(true).ToArray());
-            EdgeLoop cwLoop = new EdgeLoop(edge.GetLocalLoop(false).ToArray());
-
-            bool existingCcwLoop = false;
-            bool existingCwLoop = false;
-
-            foreach (EdgeLoop foundLoop in edgeLoopCounts[edge])
-            {
-                if (foundLoop.IsEqual(ccwLoop))
-                {
-                    existingCcwLoop = true;
-                }
-                if (foundLoop.IsEqual(cwLoop))
-                {
-                    existingCwLoop = true;
-                }
-            }
-
-            if (!existingCcwLoop)
-            {
-                edgeLoopCounts[edge].Add(ccwLoop);
-                foundLoops.Add(ccwLoop);
-            }
-            if (!existingCwLoop)
-            {
-                edgeLoopCounts[edge].Add(cwLoop);
-                foundLoops.Add(cwLoop);
-            }
-        }
-
-        return foundLoops;
     }
 
     private void RecalculateBounds()
@@ -183,7 +113,7 @@ public class EdgeLoop
     public Polygon GetPolygon()
     {
         Vector2[] points = new Vector2[edges.Count];
-        points[0] = HelperFunctions.projVec3(edges[0].a.pt);
+        points[0] = edges[0].GetSharedVertex(edges[1]).pt;
         for (int i = 1; i < points.Length; i++)
         {
             EdgeLoopEdge edge = edges[i];
