@@ -81,9 +81,9 @@ public class EdgeLoopEdge : LinkedGraphEdge
     }
 }
 
-public class EdgeLoopEdgeFactory : ILinkedGraphEdgeFactory
+public class EdgeLoopEdgeFactory : ILinkedGraphEdgeFactory<EdgeLoopEdge>
 {
-    public LinkedGraphEdge GetEdge(LinkedGraphVertex a, LinkedGraphVertex b)
+    public EdgeLoopEdge GetEdge(LinkedGraphVertex a, LinkedGraphVertex b)
     {
         return new EdgeLoopEdge(a, b);
     }
