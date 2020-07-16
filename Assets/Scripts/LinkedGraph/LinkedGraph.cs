@@ -6,7 +6,7 @@ public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
 {
     public static EdgeType AddEdge(LinkedGraphVertex aVert, LinkedGraphVertex bVert, ILinkedGraphEdgeFactory<EdgeType> edgeFactory, List<EdgeType> knownEdges)
     {
-        LinkedGraphEdge newEdge = edgeFactory.GetEdge(aVert, bVert);
+        EdgeType newEdge = edgeFactory.GetEdge(aVert, bVert);
         newEdge.a.AddConnection(newEdge);
         newEdge.b.AddConnection(newEdge);
 
