@@ -8,7 +8,7 @@ public class LinkedGraphEdge
     public LinkedGraphVertex a;
     public LinkedGraphVertex b;
     public Vector3 center => (a.pt + b.pt) / 2;
-    private Segment segRef;
+    public Segment segRef;
 
     public const float VERT_MERGE_DIST_SQR = 0.001f;
 
@@ -110,163 +110,9 @@ public class LinkedGraphEdge
         }
     } 
 
-    //disconnect this edge. Leaving it for the GC :(
-    public void Detach ()
-    {
-        a.RemoveConnection(this);
-        b.RemoveConnection(this);
-    }
-
-    private void SubdivideEdge (LinkedGraphVertex midPoint, ILinkedGraphEdgeFactory edgeFactory, List<LinkedGraphEdge> knownEdges)
-    {
-        LinkedGraphVertex aVert = a;
-        LinkedGraphVertex bVert = b;
-
-        LinkedGraphEdge aEdge = AddEdge(aVert, midPoint, edgeFactory, knownEdges);
-        LinkedGraphEdge bEdge = AddEdge(bVert, midPoint, edgeFactory, knownEdges);
-
-        OnEdgeSplit(aEdge, bEdge);
-
-        knownEdges.Remove(this);
-        Detach();
-    }
-
-    public static LinkedGraphEdge AddEdge (LinkedGraphVertex aVert, LinkedGraphVertex bVert, ILinkedGraphEdgeFactory edgeFactory, List<LinkedGraphEdge> knownEdges)
-    {
-        LinkedGraphEdge newEdge = edgeFactory.GetEdge(aVert, bVert);
-        newEdge.a.AddConnection(newEdge);
-        newEdge.b.AddConnection(newEdge);
-
-        knownEdges.Add(newEdge);
-
-        return newEdge;
-    }
-
-    //perform action on all vertices
-    public static void EnumerateVertices (List<LinkedGraphEdge> edges, System.Action<LinkedGraphVertex> action) 
-    {
-        // Enumerate local points.
-        foreach (LinkedGraphEdge eachEdge in edges)
-        {
-            action(eachEdge.a);
-            action(eachEdge.b);
-        }
-    }
-
-    //given a list of edges that may intersect with the new edge, connect the new edge
-    public static void ConnectNewEdge (Vector2 a, Vector2 b, ILinkedGraphEdgeFactory edgeFactory, List<LinkedGraphEdge> knownEdges)
-    {
-
-        LinkedGraphVertex aVert = HasVertex(knownEdges, a);
-        LinkedGraphVertex bVert = HasVertex(knownEdges, b);
-
-        if (aVert == null)
-        {
-            aVert = new LinkedGraphVertex(a);
-        }
-        if (bVert == null)
-        {
-            bVert = new LinkedGraphVertex(b);
-        }
-
-        if (knownEdges == null || knownEdges.Count == 0)
-        {
-            AddEdge(aVert, bVert, edgeFactory, knownEdges);
-            return;
-        }
-
-        //use for checking intersections
-        Segment testingSegment = Segment.SegmentWithPoints(a, b);
-        Rect testingSegBounds = testingSegment.ExpandedBounds(VERT_MERGE_DIST_SQR);
-
-        List<LinkedGraphVertex> intersectionVertices = new List<LinkedGraphVertex>();
-        intersectionVertices.Add(aVert);//these will be sorted later
-        intersectionVertices.Add(bVert);
-
-        LinkedGraphEdge[] edgesCopy = new LinkedGraphEdge[knownEdges.Count];
-        knownEdges.CopyTo(edgesCopy);
-
-        //check if new vertices are on another line
-        foreach (LinkedGraphEdge seg in edgesCopy)
-        {
-            
-            if (!seg.segRef.bounds.Overlaps(testingSegBounds))
-            {
-                continue;
-            }
-            if (seg.a == aVert || seg.a == bVert || seg.b == aVert || seg.b == bVert)
-            {
-                //do nothing in this case. 
-                //this is captured in the base case of finding existing verts
-            }
-            else if (seg.segRef.ContainsPoint(a, VERT_MERGE_DIST_SQR))
-            {
-                seg.SubdivideEdge(aVert, edgeFactory, knownEdges);
-            }
-            else if (seg.segRef.ContainsPoint(b, VERT_MERGE_DIST_SQR))
-            {
-                seg.SubdivideEdge(bVert, edgeFactory, knownEdges);
-            }
-            else if (testingSegment.ContainsPoint(seg.a.pt))
-            {
-                intersectionVertices.Add(seg.a);
-            }
-            else if (testingSegment.ContainsPoint(seg.b.pt))
-            {
-                intersectionVertices.Add(seg.b);
-            }
-            else
-            {
-                Vector2 intersectionPoint = Vector2.zero;
-                if (seg.segRef.IntersectionWithSegment(testingSegment, out intersectionPoint))
-                {
-                    LinkedGraphVertex midPtVert = new LinkedGraphVertex(intersectionPoint);
-                    seg.SubdivideEdge(midPtVert, edgeFactory, knownEdges);
-                    intersectionVertices.Add(midPtVert);
-                }
-            }
-        }
-        Vector2 sortDirection = b - a;
-
-        intersectionVertices.Sort((first, second) =>
-                                  (first.pt - a).sqrMagnitude.CompareTo(
-                                      (second.pt - a).sqrMagnitude));
-
-        for (int i = 0; i < intersectionVertices.Count - 1; i++)
-        {
-            AddEdge(intersectionVertices[i], intersectionVertices[i + 1], edgeFactory, knownEdges);
-        }
-    }
-
-    //given a list of edges, check if the vertex at pt already exists
-    public static LinkedGraphVertex HasVertex (List<LinkedGraphEdge> inEdges, Vector2 pt)
-    {
-        LinkedGraphVertex matchingVert = null;
-        EnumerateVertices(inEdges, (LinkedGraphVertex vert) =>
-        {
-            if ((vert.pt - pt).sqrMagnitude < VERT_MERGE_DIST_SQR)
-            {
-                matchingVert = vert;
-            }
-        });
-        return matchingVert;
-    }
-
     //called on the instance ofwhen it is subdivided
     public virtual void OnEdgeSplit (LinkedGraphEdge edge1, LinkedGraphEdge edge2)
     {
         Debug.LogWarning("No OnEdgeSplit() override defined");
-    }
-
-    public static void DebugDraw <EdgeType> (List<EdgeType> edges) where EdgeType : LinkedGraphEdge
-    {
-        
-        foreach (EdgeType edge in edges)
-        {
-            int colorCode = edge.GetHashCode();
-            Random.InitState(colorCode);
-
-            Debug.DrawLine(edge.a.pt, edge.b.pt, Random.ColorHSV());
-        }
     }
 }
