@@ -131,7 +131,7 @@ public class LinkedGraphEdge
         Detach();
     }
 
-    private static LinkedGraphEdge AddEdge (LinkedGraphVertex aVert, LinkedGraphVertex bVert, ILinkedGraphEdgeFactory edgeFactory, List<LinkedGraphEdge> knownEdges)
+    public static LinkedGraphEdge AddEdge (LinkedGraphVertex aVert, LinkedGraphVertex bVert, ILinkedGraphEdgeFactory edgeFactory, List<LinkedGraphEdge> knownEdges)
     {
         LinkedGraphEdge newEdge = edgeFactory.GetEdge(aVert, bVert);
         newEdge.a.AddConnection(newEdge);
