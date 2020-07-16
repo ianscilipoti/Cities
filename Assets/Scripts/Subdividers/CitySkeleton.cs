@@ -118,14 +118,16 @@ public class CitySkeleton : ISubDivScheme <SubdividableEdgeLoop>
             edgePaths.AddRange(Clipper.OpenPathsFromPolyTree(clippedResults));
         }
 
-        List<LinkedGraphEdge> knownEdges = new List<LinkedGraphEdge>(parent.GetEdges());
+
+        ILinkedGraphEdgeFactory<EdgeLoopEdge> factory = new EdgeLoopEdgeFactory();
+        List<EdgeLoopEdge> knownEdges = new List<EdgeLoopEdge>(parent.GetEdges());
         foreach (Path edgePath in edgePaths)
         {
             for (int i = 0; i < edgePath.Count-1; i ++)
             {
                 Vector2 p1 = HelperFunctions.GetPoint(edgePath[i]);
                 Vector2 p2 = HelperFunctions.GetPoint(edgePath[i+1]);
-                EdgeLoopEdge.ConnectNewEdge(p1, p2, new EdgeLoopEdgeFactory(), knownEdges);
+                LinkedGraph<EdgeLoopEdge>.ConnectNewEdge(p1, p2, factory, knownEdges);
             }
         }
 

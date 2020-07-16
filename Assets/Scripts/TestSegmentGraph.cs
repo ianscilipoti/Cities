@@ -6,7 +6,7 @@ public class TestSegmentGraph : MonoBehaviour
 {
     public bool highlight = false;
     SegmentGraph<float> graph;
-    List<LinkedGraphEdge> edges;
+    List<EdgeLoopEdge> edges;
     List<EdgeLoopEdge> highlighted;
     List<EdgeLoopEdge> collectedEdges;
 
@@ -17,7 +17,7 @@ public class TestSegmentGraph : MonoBehaviour
     void Start()
     {
         Random.InitState(0);
-        edges = new List<LinkedGraphEdge>();
+        edges = new List<EdgeLoopEdge>();
         //graph = new SegmentGraph<float>();
 
 
@@ -36,18 +36,18 @@ public class TestSegmentGraph : MonoBehaviour
         EdgeLoopEdgeFactory factory = new EdgeLoopEdgeFactory();
         for (int i = 0; i < 20; i++)
         {
-            LinkedGraphEdge.ConnectNewEdge(new Vector2(0, i/2f), new Vector2(10, i / 2f), factory, edges);
+            LinkedGraph<EdgeLoopEdge>.ConnectNewEdge(new Vector2(0, i/2f), new Vector2(10, i / 2f), factory, edges);
         }
 
         for (int i = 0; i < 20; i++)
         {
-            LinkedGraphEdge.ConnectNewEdge(new Vector2(i / 2f, 0), new Vector2(i / 2f, 10), factory, edges);
+            LinkedGraph<EdgeLoopEdge>.ConnectNewEdge(new Vector2(i / 2f, 0), new Vector2(i / 2f, 10), factory, edges);
         }
 
         //LinkedGraphEdge.ConnectNewEdge(Vector2.zero, new Vector2(0, 10), factory, edges);
 
         //LinkedGraphEdge.ConnectNewEdge(Vector2.zero, new Vector2(5, 5), factory, edges);
-
+        //LinkedGraph<EdgeLoopEdge>.ConnectNewEdge()
 
         LinkedGraphVertex bl = new LinkedGraphVertex(Vector2.down + Vector2.left);
         LinkedGraphVertex br = new LinkedGraphVertex(Vector2.down + Vector2.right);
@@ -76,24 +76,19 @@ public class TestSegmentGraph : MonoBehaviour
             
             if (highlighted != null)
             {
-                List<LinkedGraphEdge> hiEd = new List<LinkedGraphEdge>();
-                foreach (EdgeLoopEdge ed in highlighted)
-                {
-                    hiEd.Add(ed);
-                }
-                LinkedGraphEdge.DebugDraw<LinkedGraphEdge>(hiEd); 
+                LinkedGraph<EdgeLoopEdge>.DebugDraw(highlighted); 
             }
             else
             {
                 List<EdgeLoopEdge> e = new List<EdgeLoopEdge>();
-                e.Add((EdgeLoopEdge)edges[highlightedInd]);
-                LinkedGraphEdge.DebugDraw<EdgeLoopEdge>(e);
+                e.Add(edges[highlightedInd]);
+                LinkedGraph<EdgeLoopEdge>.DebugDraw(e);
             }
               
         }
         else
         {
-            LinkedGraphEdge.DebugDraw<LinkedGraphEdge>(edges);
+            LinkedGraph<EdgeLoopEdge>.DebugDraw(edges);
         }
        
 	}

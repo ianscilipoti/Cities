@@ -94,7 +94,6 @@ public class EdgeLoop
             if(edge.a.NumConnections() <= 1 || edge.b.NumConnections() <= 1)
             {
                 interiorEdges.Remove(edge);
-                edge.Detach();
                 Debug.LogWarning("Detached an edge while getting interior edge loops");
             }
         }
