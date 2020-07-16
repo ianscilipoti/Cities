@@ -75,8 +75,6 @@ public class EdgeLoopEdge : LinkedGraphEdge
         return foundEdges;
     }
 
-
-
     public override void OnEdgeSplit (LinkedGraphEdge edge1, LinkedGraphEdge edge2)
     {
         //Debug.Log("Implement me. Need to fix edgeLoops involved.");

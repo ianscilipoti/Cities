@@ -64,8 +64,8 @@ public class SubdividableEdgeLoop : EdgeLoop, Subdividable
 
     public static List<SubdividableEdgeLoop> CollectInteriorLoops (EdgeLoop boundary)
     {
-        List<EdgeLoopEdge> interiorEdges = boundary.GetInteriorEdgeLoopEdges();
-        List<EdgeLoopEdge> exteriorEdges = new List<EdgeLoopEdge>(boundary.GetEdges());
+        //List<EdgeLoopEdge> interiorEdges = boundary.GetInteriorEdgeLoopEdges();
+        //List<EdgeLoopEdge> exteriorEdges = new List<EdgeLoopEdge>(boundary.GetEdges());
 
         return null;
     }

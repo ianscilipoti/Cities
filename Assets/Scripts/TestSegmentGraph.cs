@@ -49,6 +49,17 @@ public class TestSegmentGraph : MonoBehaviour
         //LinkedGraphEdge.ConnectNewEdge(Vector2.zero, new Vector2(5, 5), factory, edges);
 
 
+        LinkedGraphVertex bl = new LinkedGraphVertex(Vector2.down + Vector2.left);
+        LinkedGraphVertex br = new LinkedGraphVertex(Vector2.down + Vector2.right);
+
+        LinkedGraphVertex tl = new LinkedGraphVertex(Vector2.up + Vector2.left);
+        LinkedGraphVertex tr = new LinkedGraphVertex(Vector2.up + Vector2.right);
+
+        LinkedGraphVertex mid = new LinkedGraphVertex(Vector2.zero);
+
+        //List<LinkedGraphEdge> knownEdges = new List<EdgeLoopEdge>();
+
+        //EdgeLoopEdge b = EdgeLoopEdge.AddEdge(bl, br, factory, knownEdges);
 
 
 
