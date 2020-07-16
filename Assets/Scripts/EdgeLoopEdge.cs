@@ -4,10 +4,35 @@ using UnityEngine;
 
 public class EdgeLoopEdge : LinkedGraphEdge
 {
-    private List<EdgeLoop> involvedEdges;
+    private List<EdgeLoop> involvedLoops;
     public EdgeLoopEdge (LinkedGraphVertex a, LinkedGraphVertex b) : base(a, b)
     {
-        involvedEdges = new List<EdgeLoop>();
+        involvedLoops = new List<EdgeLoop>();
+    }
+
+    public void InvolveLoop (EdgeLoop loop)
+    {
+        involvedLoops.Add(loop);
+    }
+
+    public static EdgeLoopEdge[] GetPolygonEdges (int sides, float radius, float radiusRandomness)
+    {
+        LinkedGraphVertex[] verts = new LinkedGraphVertex[sides];
+        EdgeLoopEdge[] edges = new EdgeLoopEdge[sides];
+        ILinkedGraphEdgeFactory<EdgeLoopEdge> factory = new EdgeLoopEdgeFactory();
+        for (int i = 0; i < sides; i ++)
+        {
+            float angle = (i / (float)sides) * Mathf.PI * 2;
+            verts[i] = new LinkedGraphVertex(new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * (radius + Random.Range(-radiusRandomness, radiusRandomness)));
+        }
+
+        for (int i = 0; i < sides; i++)
+        {
+            int firstVertInd = i;
+            int secondVertInd = (i + 1) % sides;
+            edges[i] = new EdgeLoopEdge(verts[firstVertInd], verts[secondVertInd]);
+        }
+        return edges;
     }
 
     //gets a list of edges representing the loop. Construction of the EdgeLoop Object is left to the user
@@ -72,12 +97,31 @@ public class EdgeLoopEdge : LinkedGraphEdge
             }
 
         }
+        //maintain the loops go ccw paradigm
+        if (!ccw)
+        {
+            foundEdges.Reverse();
+        }
         return foundEdges;
     }
-
+    //called when this edge is being split into edge1 and edge2
     public override void OnEdgeSplit (LinkedGraphEdge edge1, LinkedGraphEdge edge2)
     {
-        //Debug.Log("Implement me. Need to fix edgeLoops involved.");
+        if (!(edge1 is EdgeLoopEdge) || !(edge2 is EdgeLoopEdge))
+        {
+            Debug.LogWarning("Bad Split. Edge1 or Edge2 aren't an EdgeLoopEdge");
+            return;
+        }
+        EdgeLoopEdge edgeL1 = (EdgeLoopEdge)edge1;
+        EdgeLoopEdge edgeL2 = (EdgeLoopEdge)edge2;
+
+        if (involvedLoops.Count > 0)
+        {
+            foreach (EdgeLoop involved in involvedLoops)
+            {
+                involved.SplitEdge(this, edgeL1, edgeL2);
+            }
+        }
     }
 }
 

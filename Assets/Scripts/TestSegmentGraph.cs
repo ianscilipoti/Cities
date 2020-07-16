@@ -57,10 +57,10 @@ public class TestSegmentGraph : MonoBehaviour
 
         LinkedGraphVertex mid = new LinkedGraphVertex(Vector2.zero);
 
-        EdgeLoopEdge b = LinkedGraph<EdgeLoopEdge>.AddEdge(bl, br, factory, edges);
+        EdgeLoopEdge b = LinkedGraph<EdgeLoopEdge>.AddEdge(br, bl, factory, edges);
         EdgeLoopEdge r = LinkedGraph<EdgeLoopEdge>.AddEdge(br, tr, factory, edges);
         EdgeLoopEdge t = LinkedGraph<EdgeLoopEdge>.AddEdge(tl, tr, factory, edges);
-        EdgeLoopEdge l = LinkedGraph<EdgeLoopEdge>.AddEdge(tl, bl, factory, edges);
+        EdgeLoopEdge l = LinkedGraph<EdgeLoopEdge>.AddEdge(bl, tl, factory, edges);
 
         EdgeLoopEdge blm = LinkedGraph<EdgeLoopEdge>.AddEdge(bl, mid, factory, edges);
         EdgeLoopEdge brm = LinkedGraph<EdgeLoopEdge>.AddEdge(br, mid, factory, edges);
@@ -69,9 +69,31 @@ public class TestSegmentGraph : MonoBehaviour
 
         SubdividableEdgeLoop squareLoop = new SubdividableEdgeLoop(new EdgeLoopEdge[] {b,r,t,l}, true);
 
-        List<EdgeLoop> children = squareLoop.GetInteriorEdgeLoops();
+        print(squareLoop.EdgeFollowsWinding(b));
+        print(squareLoop.EdgeFollowsWinding(r));
+        print(squareLoop.EdgeFollowsWinding(t));
+        print(squareLoop.EdgeFollowsWinding(l));
 
-        print(edges.Count);
+        List<EdgeLoopEdge[]> children = squareLoop.GetInteriorEdgeLoops();
+
+        List<float> test = new List<float>();
+        test.Add(0);
+        test.Add(1);
+        test.Add(2);
+
+        test.Insert(2, 1.5f);
+
+        test.RemoveAt(2);
+
+        test.Insert(2, 1.5f);
+        test.Insert(3, 1.7f);
+
+
+        foreach (float i in test)
+        {
+            print(i);
+        }
+
 
     }
 

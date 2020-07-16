@@ -13,10 +13,11 @@ public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
     public static EdgeType AddEdge(LinkedGraphVertex aVert, LinkedGraphVertex bVert, ILinkedGraphEdgeFactory<EdgeType> edgeFactory, List<EdgeType> knownEdges)
     {
         EdgeType newEdge = edgeFactory.GetEdge(aVert, bVert);
-        newEdge.a.AddConnection(newEdge);
-        newEdge.b.AddConnection(newEdge);
 
-        knownEdges.Add(newEdge);
+        if(knownEdges != null)
+        {
+            knownEdges.Add(newEdge); 
+        }
 
         return newEdge;
     }
@@ -29,7 +30,7 @@ public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
             int colorCode = edge.GetHashCode();
             Random.InitState(colorCode);
 
-            Debug.DrawLine(edge.a.pt, edge.b.pt, Random.ColorHSV());
+            Debug.DrawLine(HelperFunctions.projVec2(edge.a.pt), HelperFunctions.projVec2(edge.b.pt), Random.ColorHSV());
         }
     }
 
@@ -46,7 +47,7 @@ public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
         LinkedGraphVertex bVert = edge.b;
 
         EdgeType aEdge = AddEdge(aVert, midPoint, edgeFactory, knownEdges);
-        EdgeType bEdge = AddEdge(bVert, midPoint, edgeFactory, knownEdges);
+        EdgeType bEdge = AddEdge(midPoint, bVert, edgeFactory, knownEdges);
 
         edge.OnEdgeSplit(aEdge, bEdge);
 

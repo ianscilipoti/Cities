@@ -120,7 +120,7 @@ public class CitySkeleton : ISubDivScheme <SubdividableEdgeLoop>
 
 
         ILinkedGraphEdgeFactory<EdgeLoopEdge> factory = new EdgeLoopEdgeFactory();
-        List<EdgeLoopEdge> knownEdges = new List<EdgeLoopEdge>(parent.GetEdges());
+        List<EdgeLoopEdge> knownEdges = new List<EdgeLoopEdge>(parent.GetEdgesEnumerable());
         foreach (Path edgePath in edgePaths)
         {
             for (int i = 0; i < edgePath.Count-1; i ++)
@@ -131,7 +131,15 @@ public class CitySkeleton : ISubDivScheme <SubdividableEdgeLoop>
             }
         }
 
-        return new List<SubdividableEdgeLoop>();
+        List<EdgeLoopEdge[]> formedChildLoops = parent.GetInteriorEdgeLoops();
+        List<SubdividableEdgeLoop> children = new List<SubdividableEdgeLoop>();
+        foreach (EdgeLoopEdge[] childLoop in formedChildLoops)
+        {
+            children.Add(parent.GetNextChild(childLoop));
+        }
+
+
+        return children;
     }
 
     struct RoadDestination

@@ -21,6 +21,9 @@ public class LinkedGraphEdge
         segRef = new Segment();
         segRef.a = a.pt;
         segRef.b = b.pt;
+
+        a.AddConnection(this);
+        b.AddConnection(this);
     }
 
     public LinkedGraphVertex GetSharedVertex (LinkedGraphEdge other)
@@ -169,6 +172,7 @@ public class LinkedGraphEdge
     } 
 
     //called on the instance ofwhen it is subdivided
+    //Ensure that edge1.a is equal to this.a and edge2.b is equal to this.b
     public virtual void OnEdgeSplit (LinkedGraphEdge edge1, LinkedGraphEdge edge2)
     {
         Debug.LogWarning("No OnEdgeSplit() override defined");

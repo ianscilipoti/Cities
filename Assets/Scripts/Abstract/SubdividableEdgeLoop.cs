@@ -19,7 +19,7 @@ public class SubdividableEdgeLoop : EdgeLoop, Subdividable
         isSubdividable = subdividable;
     }
 
-    public SubdividableEdgeLoop(EdgeLoop edgeLoop, bool subdividable) : base(edgeLoop.GetEdges().ToArray())
+    public SubdividableEdgeLoop(EdgeLoop edgeLoop, bool subdividable) : base(edgeLoop.GetEdgesEnumerable().ToArray())
     {
         children = new List<SubdividableEdgeLoop>();
         isSubdividable = subdividable;
@@ -40,9 +40,9 @@ public class SubdividableEdgeLoop : EdgeLoop, Subdividable
         return isSubdividable;
     }
 
-    public List<EdgeLoop> GetInteriorEdgeLoops()
+    public List<EdgeLoopEdge[]> GetInteriorEdgeLoops()
     {
-        List<EdgeLoop> foundLoops = new List<EdgeLoop>(); ;
+        List<EdgeLoopEdge[]> foundLoops = new List<EdgeLoopEdge[]>(); ;
 
         //starting at the first edge, do a search outward to collect all edges that are within 
         List<EdgeLoopEdge> allEdges = edges[0].CollectEdges<EdgeLoopEdge>(true, EdgeWithinLoop); //exterior and interior
@@ -63,11 +63,11 @@ public class SubdividableEdgeLoop : EdgeLoop, Subdividable
         }
 
         //keep track of the loops we've already found for each edge
-        Dictionary<EdgeLoopEdge, List<EdgeLoop>> edgeLoopCounts = new Dictionary<EdgeLoopEdge, List<EdgeLoop>>();
+        Dictionary<EdgeLoopEdge, List<EdgeLoopEdge[]>> edgeLoopCounts = new Dictionary<EdgeLoopEdge, List<EdgeLoopEdge[]>>();
 
         foreach (EdgeLoopEdge edge in interiorEdges)
         {
-            edgeLoopCounts.Add(edge, new List<EdgeLoop>());
+            edgeLoopCounts.Add(edge, new List<EdgeLoopEdge[]>());
         }
 
         foreach (EdgeLoopEdge edge in interiorEdges)
@@ -76,19 +76,19 @@ public class SubdividableEdgeLoop : EdgeLoop, Subdividable
             {
                 continue;//we've found both loops associated with this edge
             }
-            EdgeLoop ccwLoop = new EdgeLoop(edge.GetLocalLoop(true).ToArray());
-            EdgeLoop cwLoop = new EdgeLoop(edge.GetLocalLoop(false).ToArray());
+            EdgeLoopEdge[] ccwLoop = edge.GetLocalLoop(true).ToArray();
+            EdgeLoopEdge[] cwLoop = edge.GetLocalLoop(false).ToArray();
 
             bool existingCcwLoop = false;
             bool existingCwLoop = false;
 
-            foreach (EdgeLoop foundLoop in edgeLoopCounts[edge])
+            foreach (EdgeLoopEdge[] foundLoop in edgeLoopCounts[edge])
             {
-                if (foundLoop.IsEqual(ccwLoop))
+                if (EdgeLoop.IsEqual(foundLoop, ccwLoop))
                 {
                     existingCcwLoop = true;
                 }
-                if (foundLoop.IsEqual(cwLoop))
+                if (EdgeLoop.IsEqual(foundLoop, cwLoop))
                 {
                     existingCwLoop = true;
                 }
@@ -96,7 +96,7 @@ public class SubdividableEdgeLoop : EdgeLoop, Subdividable
 
             if (!existingCcwLoop)
             {
-                foreach (EdgeLoopEdge subEdge in ccwLoop.GetEdges())
+                foreach (EdgeLoopEdge subEdge in ccwLoop)
                 {
                     if (edgeLoopCounts.ContainsKey(subEdge))
                     {
@@ -108,7 +108,7 @@ public class SubdividableEdgeLoop : EdgeLoop, Subdividable
             }
             if (!existingCwLoop)
             {
-                foreach (EdgeLoopEdge subEdge in cwLoop.GetEdges())
+                foreach (EdgeLoopEdge subEdge in cwLoop)
                 {
                     if (edgeLoopCounts.ContainsKey(subEdge))
                     {
@@ -124,21 +124,22 @@ public class SubdividableEdgeLoop : EdgeLoop, Subdividable
 
 	public Subdividable[] Subdivide()
 	{
-        return GetDivScheme().GetChildren(this).ToArray();
+        children = GetDivScheme().GetChildren(this);
+        return children.ToArray();
 	}
 
     public void DebugDraw (float strength) 
     {
-        //if (children.Count == 0)
-        //{
-        //    Color drawCol = getDebugColor();
-        //    EnumerateEdges((Edge eachEdge_) =>
-        //    {
-        //        UnityEngine.Debug.DrawLine(HelperFunctions.projVec2(eachEdge_.a), HelperFunctions.projVec2(eachEdge_.b), drawCol);
-        //    });
+        if (children.Count == 0)
+        {
+            Color drawCol = getDebugColor();
+            EnumerateEdges((EdgeLoopEdge eachEdge_) =>
+            {
+                UnityEngine.Debug.DrawLine(HelperFunctions.projVec2(eachEdge_.a.pt), HelperFunctions.projVec2(eachEdge_.b.pt), drawCol);
+            });
 
-        //    Debug.DrawLine(HelperFunctions.projVec2(centroid), HelperFunctions.projVec2(centroid) + Vector3.up * 0.2f, drawCol);
-        //}
+            Debug.DrawLine(HelperFunctions.projVec2(GetPolygon().centroid), HelperFunctions.projVec2(GetPolygon().centroid) + Vector3.up * 0.2f, Color.white);
+        }
 
         foreach (var child in children)
         {
@@ -149,13 +150,5 @@ public class SubdividableEdgeLoop : EdgeLoop, Subdividable
     public virtual Color getDebugColor()
     {
         return Color.gray;
-    }
-
-    public static List<SubdividableEdgeLoop> CollectInteriorLoops (EdgeLoop boundary)
-    {
-        //List<EdgeLoopEdge> interiorEdges = boundary.GetInteriorEdgeLoopEdges();
-        //List<EdgeLoopEdge> exteriorEdges = new List<EdgeLoopEdge>(boundary.GetEdges());
-
-        return null;
     }
 }

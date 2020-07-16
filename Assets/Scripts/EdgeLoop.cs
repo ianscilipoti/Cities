@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using EPPZ.Geometry.Model;
+using System;
 
-
+//should be a ccw loop of edges
 public class EdgeLoop
 {
     protected List<EdgeLoopEdge> edges;
@@ -17,6 +18,68 @@ public class EdgeLoop
         if (!Verify())
         {
             Debug.LogWarning("Edge loop edges do not form a loop.");
+        }
+
+        foreach (EdgeLoopEdge edge in edges)
+        {
+            edge.InvolveLoop(this);
+        }
+    }
+
+    //check to see if an edge in this loop follows the ccw
+    public bool EdgeFollowsWinding (EdgeLoopEdge edge)
+    {
+        int ind = edges.IndexOf(edge);
+        if (ind == -1)
+        {
+            Debug.Log("Could not calculate if edge follows winding. Not part of loop.");
+            return false;
+        }
+        //get the vertex on first edge that is shared by the first two edges
+        LinkedGraphVertex lastVertex = edges[0].GetSharedVertex(edges[1]);
+        for (int i = 0; i < edges.Count; i ++)
+        {
+            if (i > 0)
+            {
+                lastVertex = edges[i].GetOppositeVertex(lastVertex);
+            }
+            if (i == ind && edges[i].b == lastVertex)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //split edge into a and b.
+    public void SplitEdge(EdgeLoopEdge edge, EdgeLoopEdge a, EdgeLoopEdge b)
+    {
+        if (a.a != edge.a || b.b != edge.b)
+        {
+            Debug.LogWarning("Bad split. A or B don't represent a split of edge");
+            return;
+        }
+        int ind = edges.IndexOf(edge);
+        if (ind == -1)
+        {
+            Debug.Log("Could not split edge as this loop does not contain it.");
+        }
+        else
+        {
+            bool edgeFollowsWinding = EdgeFollowsWinding(edge);
+            edges.RemoveAt(ind);
+
+            //make sure we add the two replacing edges in correct order
+            if (edgeFollowsWinding)
+            {
+                edges.Insert(ind, a);
+                edges.Insert(ind + 1, b);
+            }
+            else
+            {
+                edges.Insert(ind, b);
+                edges.Insert(ind + 1, a);
+            }
         }
     }
 
@@ -33,30 +96,40 @@ public class EdgeLoop
         return true;
     }
 
-    public IEnumerable<EdgeLoopEdge> GetEdges()
+    public IEnumerable<EdgeLoopEdge> GetEdgesEnumerable()
     {
         return edges;
+    }
+
+    public EdgeLoopEdge[] GetEdges ()
+    {
+        return edges.ToArray();
     }
 
     //search delegate
     protected bool EdgeWithinLoop (LinkedGraphEdge theEdge)
     {
         Polygon poly = GetPolygon();
-        if ((poly.PermiterContainsPoint(theEdge.a.pt) || poly.ContainsPoint(theEdge.a.pt)) &&
-            (poly.PermiterContainsPoint(theEdge.b.pt) || poly.ContainsPoint(theEdge.b.pt)))
+        if ((poly.PermiterContainsPoint(theEdge.a.pt, Segment.defaultAccuracy*2) || poly.ContainsPoint(theEdge.a.pt)) &&
+            (poly.PermiterContainsPoint(theEdge.b.pt, Segment.defaultAccuracy*2) || poly.ContainsPoint(theEdge.b.pt)))
         {
             return true;
         }
         return false;
     }
 
-    public bool IsEqual (EdgeLoop other)
+    public static bool IsEqual (EdgeLoop a, EdgeLoop b)
     {
-        if (edges.Count != other.edges.Count)
+        return IsEqual(a.GetEdges(), b.GetEdges());
+    }
+
+    public static bool IsEqual (EdgeLoopEdge[] a, EdgeLoopEdge[] b)
+    {
+        if (a.Length != b.Length)
         {
             return false;
         }
-        int indexOfFirst = other.edges.IndexOf(edges[0]);
+        int indexOfFirst = Array.IndexOf(b, a[0]);
         if(indexOfFirst == -1)//our first edge is not in the other loop
         {
             return false;
@@ -64,9 +137,9 @@ public class EdgeLoop
         else 
         {
             int offset = indexOfFirst;//now that we know the offset, we must see all edges match with same offset
-            for (int i = 0; i < edges.Count; i ++)
+            for (int i = 0; i < a.Length; i ++)
             {
-                if (edges[i] != other.edges[(i + offset) % edges.Count])
+                if (a[i] != b[(i + offset) % a.Length])
                 {
                     return false;
                 }
@@ -98,7 +171,7 @@ public class EdgeLoop
     public Vector3 GetCenter()
     {
         Vector3 total = Vector3.zero;
-        foreach (EdgeLoopEdge edge in GetEdges())
+        foreach (EdgeLoopEdge edge in GetEdgesEnumerable())
         {
             total += edge.center;
         }

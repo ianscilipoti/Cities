@@ -28,6 +28,6 @@ public class City : CityRegion
     //Cities always subdivide with citySkeleton
     //this function could randomize what subdivscheme is returned easily
     public override ISubDivScheme<SubdividableEdgeLoop> GetDivScheme () {
-        return (ISubDivScheme<SubdividableEdgeLoop>)new CitySkeleton(new Vector2[]{entrence}, 16);
+        return new CitySkeleton(new Vector2[]{entrence}, 16);
     } 
 }
