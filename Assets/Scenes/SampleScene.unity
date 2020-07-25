@@ -307,3 +307,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6fa6370b37198460487cbf45140c7f4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  showCity: 1
+  showRoads: 0

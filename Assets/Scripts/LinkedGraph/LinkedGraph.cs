@@ -12,7 +12,12 @@ public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
 
     public static EdgeType AddEdge(LinkedGraphVertex aVert, LinkedGraphVertex bVert, ILinkedGraphEdgeFactory<EdgeType> edgeFactory, List<EdgeType> knownEdges)
     {
-        EdgeType newEdge = edgeFactory.GetEdge(aVert, bVert);
+        return AddEdge(aVert, bVert, edgeFactory, null, knownEdges);
+    }
+
+    public static EdgeType AddEdge(LinkedGraphVertex aVert, LinkedGraphVertex bVert, ILinkedGraphEdgeFactory<EdgeType> edgeFactory, System.Object factoryParams, List<EdgeType> knownEdges)
+    {
+        EdgeType newEdge = edgeFactory.GetEdge(aVert, bVert, factoryParams);
 
         if(knownEdges != null)
         {
@@ -46,8 +51,8 @@ public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
         LinkedGraphVertex aVert = edge.a;
         LinkedGraphVertex bVert = edge.b;
 
-        EdgeType aEdge = AddEdge(aVert, midPoint, edgeFactory, knownEdges);
-        EdgeType bEdge = AddEdge(midPoint, bVert, edgeFactory, knownEdges);
+        EdgeType aEdge = AddEdge(aVert, midPoint, edgeFactory, null, knownEdges);
+        EdgeType bEdge = AddEdge(midPoint, bVert, edgeFactory, null, knownEdges);
 
         edge.OnEdgeSplit(aEdge, bEdge);
 
@@ -55,8 +60,13 @@ public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
         Detach(edge);
     }
 
-    //given a list of edges that may intersect with the new edge, connect the new edge
     public static void ConnectNewEdge(Vector2 a, Vector2 b, ILinkedGraphEdgeFactory<EdgeType> edgeFactory, List<EdgeType> knownEdges)
+    {
+        ConnectNewEdge(a, b, edgeFactory, null, knownEdges);
+    }
+
+    //given a list of edges that may intersect with the new edge, connect the new edge
+    public static void ConnectNewEdge(Vector2 a, Vector2 b, ILinkedGraphEdgeFactory<EdgeType> edgeFactory, System.Object factoryParams, List<EdgeType> knownEdges)
     {
 
         LinkedGraphVertex aVert = HasVertex(knownEdges, a);
@@ -73,7 +83,7 @@ public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
 
         if (knownEdges == null || knownEdges.Count == 0)
         {
-            AddEdge(aVert, bVert, edgeFactory, knownEdges);
+            AddEdge(aVert, bVert, edgeFactory, factoryParams, knownEdges);
             return;
         }
 
@@ -136,7 +146,7 @@ public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
 
         for (int i = 0; i < intersectionVertices.Count - 1; i++)
         {
-            AddEdge(intersectionVertices[i], intersectionVertices[i + 1], edgeFactory, knownEdges);
+            AddEdge(intersectionVertices[i], intersectionVertices[i + 1], edgeFactory, factoryParams, knownEdges);
         }
     }
 

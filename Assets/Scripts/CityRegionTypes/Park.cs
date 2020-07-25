@@ -1,32 +1,33 @@
-﻿//using System.Collections;
-//using System.Collections.Generic;
-//using UnityEngine;
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
 
-//using Polygon = EPPZ.Geometry.Model.Polygon;
+using Polygon = EPPZ.Geometry.Model.Polygon;
 
-//public class Park : CityRegion
-//{
+public class Park : CityRegion
+{
+    public Park (CityEdge[] edges, City cityRoot) : base(edges, cityRoot, false) {
+    }
 
-//    public Vector2 entrence;
+	public override Color getDebugColor()
+	{
+        return new Color(0, 1f, 0.1f, 0.6f);
+	}
 
-//    public Park (Vector2[] boundary, City cityRoot) : base(boundary, cityRoot, false) {
-//        entrence = (edges[0].a + edges[0].b) / 2;
-//    }
+    public override int GetGenerationPass()
+    {
+        return 0;
+    }
 
-//	public override Color getDebugColor()
-//	{
-//        return new Color(0, 1f, 0.1f, 0.6f);
-//	}
+    public override SubdividableEdgeLoop<CityEdge> GetNextChild (CityEdge[] edges) 
+    {
+        return null;//unsubdividable
+    }
 
-//	public override ISubdividable GetNextChild (Vector2[] boundary) 
-//    {
-//        return null;//unsubdividable
-//    }
-
-//    //Cities always subdivide with citySkeleton
-//    //this function could randomize what subdivscheme is returned easily
-//    public override ISubDivScheme GetDivScheme () {
-//        return null;//unsubdividable
-//    }
-//}
+    //Cities always subdivide with citySkeleton
+    //this function could randomize what subdivscheme is returned easily
+    public override ISubDivScheme<SubdividableEdgeLoop<CityEdge>> GetDivScheme () {
+        return null;//unsubdividable
+    }
+}

@@ -67,7 +67,10 @@ public class TestSegmentGraph : MonoBehaviour
         EdgeLoopEdge trm = LinkedGraph<EdgeLoopEdge>.AddEdge(tr, mid, factory, edges);
         EdgeLoopEdge tlm = LinkedGraph<EdgeLoopEdge>.AddEdge(tl, mid, factory, edges);
 
-        SubdividableEdgeLoop squareLoop = new SubdividableEdgeLoop(new EdgeLoopEdge[] {b,r,t,l}, true);
+        SubdividableEdgeLoop<EdgeLoopEdge> squareLoop = new SubdividableEdgeLoop<EdgeLoopEdge>(new EdgeLoopEdge[] {b,r,t,l}, true);
+
+
+        //LinkedGraph<EdgeLoopEdge> test = (LinkedGraph<EdgeLoopEdge>)new LinkedGraph<CityEdge>();
 
         print(squareLoop.EdgeFollowsWinding(b));
         print(squareLoop.EdgeFollowsWinding(r));
@@ -94,32 +97,37 @@ public class TestSegmentGraph : MonoBehaviour
             print(i);
         }
 
+        print("poo");
+        for (int i = 0; i < 5; i ++)
+        {
+            print(i + " %" + (i - 1) % 5);
+        }
 
     }
 
 	private void Update()
 	{
-        highlighted = ((EdgeLoopEdge)edges[highlightedInd]).GetLocalLoop(ccw);
-        Debug.DrawLine((Vector3)edges[highlightedInd].a.pt + Vector3.forward, (Vector3)edges[highlightedInd].b.pt + Vector3.forward, Color.red);
-        if(highlight)
-        {
+        //highlighted = ((EdgeLoopEdge)edges[highlightedInd]).GetLocalLoop(ccw);
+        //Debug.DrawLine((Vector3)edges[highlightedInd].a.pt + Vector3.forward, (Vector3)edges[highlightedInd].b.pt + Vector3.forward, Color.red);
+        //if(highlight)
+        //{
             
-            if (highlighted != null)
-            {
-                LinkedGraph<EdgeLoopEdge>.DebugDraw(highlighted); 
-            }
-            else
-            {
-                List<EdgeLoopEdge> e = new List<EdgeLoopEdge>();
-                e.Add(edges[highlightedInd]);
-                LinkedGraph<EdgeLoopEdge>.DebugDraw(e);
-            }
+        //    if (highlighted != null)
+        //    {
+        //        LinkedGraph<EdgeLoopEdge>.DebugDraw(highlighted); 
+        //    }
+        //    else
+        //    {
+        //        List<EdgeLoopEdge> e = new List<EdgeLoopEdge>();
+        //        e.Add(edges[highlightedInd]);
+        //        LinkedGraph<EdgeLoopEdge>.DebugDraw(e);
+        //    }
               
-        }
-        else
-        {
-            LinkedGraph<EdgeLoopEdge>.DebugDraw(edges);
-        }
+        //}
+        //else
+        //{
+        //    LinkedGraph<EdgeLoopEdge>.DebugDraw(edges);
+        //}
        
 	}
 }

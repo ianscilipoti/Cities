@@ -23,11 +23,9 @@ public class CityTesting : MonoBehaviour
         //    float rnd = Random.Range(1f, 1.5f);
         //    bPoly.Add(new Vector2((int)(cos * 8f * rnd), (int)(sin * 8f * rnd)));
         //}
-        city = new City(EdgeLoopEdge.GetPolygonEdges(3, 20f, 5f));
-        city.Subdivide();
-
-        test = city.GetEdges()[0].CollectEdges<EdgeLoopEdge>(false, null);
-
+        //Random.InitState(0);
+        city = City.GenerateCity();
+        //city.SubdivideRecursive();
         //roadGraph = city.GetBoundaryGraph();
 
     }
@@ -37,7 +35,7 @@ public class CityTesting : MonoBehaviour
     {  
         if(showCity)
         {
-            city.DebugDraw(1f); 
+            city.DebugDrawRecursive(1f); 
         }
         //if(showRoads)
         //{

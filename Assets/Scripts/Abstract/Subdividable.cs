@@ -7,9 +7,11 @@ using EPPZ.Geometry.Model;
 //provides basic structural functionality to recursively subdivide an object
 public interface Subdividable
 {
-    Subdividable[] Subdivide();
+    bool Subdivide();
 
     bool IsSubdividable();
+
+    bool IsSubdivided();
 
     //public virtual void SubdivideR()
     //{

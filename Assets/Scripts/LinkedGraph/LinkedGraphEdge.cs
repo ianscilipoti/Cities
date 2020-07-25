@@ -9,6 +9,7 @@ public class LinkedGraphEdge
     public LinkedGraphVertex b;
     public Vector3 center => (a.pt + b.pt) / 2;
     public Segment segRef;
+    private List<IEdgeSplitListener> listeners;
 
     public const float VERT_MERGE_DIST_SQR = 0.001f;
 
@@ -24,6 +25,13 @@ public class LinkedGraphEdge
 
         a.AddConnection(this);
         b.AddConnection(this);
+
+        listeners = new List<IEdgeSplitListener>();
+    }
+
+    public void AddEdgeSplitListener(IEdgeSplitListener listener)
+    {
+        listeners.Add(listener);
     }
 
     public LinkedGraphVertex GetSharedVertex (LinkedGraphEdge other)
@@ -173,8 +181,19 @@ public class LinkedGraphEdge
 
     //called on the instance ofwhen it is subdivided
     //Ensure that edge1.a is equal to this.a and edge2.b is equal to this.b
-    public virtual void OnEdgeSplit (LinkedGraphEdge edge1, LinkedGraphEdge edge2)
+    public void OnEdgeSplit (LinkedGraphEdge edge1, LinkedGraphEdge edge2)
     {
-        Debug.LogWarning("No OnEdgeSplit() override defined");
+        foreach (IEdgeSplitListener listener in listeners)
+        {
+            listener.SplitEdge(this, edge1, edge2);
+            edge1.AddEdgeSplitListener(listener);
+            edge2.AddEdgeSplitListener(listener);
+        }
+        OnEdgeSplitCustom(edge1, edge2);
+    }
+
+    public virtual void OnEdgeSplitCustom (LinkedGraphEdge edge1, LinkedGraphEdge edge2)
+    {
+        
     }
 }

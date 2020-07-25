@@ -8,73 +8,38 @@ using ClipperLib;
 using Path = System.Collections.Generic.List<ClipperLib.IntPoint>;
 using Paths = System.Collections.Generic.List<System.Collections.Generic.List<ClipperLib.IntPoint>>;
 
-public class GetPieSections : ISubDivScheme<SubdividableEdgeLoop>
+public class GetPieSections <EdgeType> : EdgeLoopSubdivider<EdgeType> where EdgeType : EdgeLoopEdge
 {
-    public List<SubdividableEdgeLoop> GetChildren(SubdividableEdgeLoop parent)
+    private ILinkedGraphEdgeFactory<EdgeType> factory;
+    private System.Object factoryParams;
+
+    public GetPieSections (ILinkedGraphEdgeFactory<EdgeType> factory, System.Object factoryParams)
     {
-        //generate points of interest
-        List<Vector2> points = new List<Vector2>();
-        Polygon parentPoly = parent.GetPolygon();
+        this.factory = factory;
+        this.factoryParams = factoryParams;
+    }
+
+    public override List<SubdividableEdgeLoop<EdgeType>> GetChildren(SubdividableEdgeLoop<EdgeType> parent)
+    {
+
+        Polygon parentPoly = new Polygon(parent.GetSimplifiedPoints(1f * Mathf.Deg2Rad));
         Vector2 centroid = parentPoly.centroid;
         List<Vector2> edgeCrossings = new List<Vector2>();
-        parent.EnumerateEdges((EdgeLoopEdge edge) =>
+        parentPoly.EnumerateEdges((Edge edge) =>
         {
-            Vector2 edgeCrossing = Vector2.Lerp(edge.a.pt, edge.b.pt, Random.Range(0.4f, 0.6f));
+            Vector2 edgeCrossing = Vector2.Lerp(edge.a, edge.b, Random.Range(0.4f, 0.6f));
             edgeCrossings.Add(edgeCrossing);
-            points.Add(HelperFunctions.ScaleFrom(edgeCrossing, centroid, 5));
+            //points.Add(HelperFunctions.ScaleFrom(edgeCrossing, centroid, 5));
         });
-        points.Add(centroid);
 
-        //triangulate points of interest to get potential road segments
-        TriangleNet.Geometry.Polygon polygon = new TriangleNet.Geometry.Polygon();
-        foreach (Vector2 pt in points)
+        //build a list of dividing edges and pass it to the child collector
+        List<DividingEdge> dividingEdges = new List<DividingEdge>();
+
+        foreach (Vector2 crossing in edgeCrossings)
         {
-            TriangleNet.Geometry.Vertex vert = new TriangleNet.Geometry.Vertex(pt.x, pt.y);
-            polygon.Add(vert);
+            dividingEdges.Add(new DividingEdge(crossing, centroid, factory, factoryParams));
         }
 
-        TriangleNet.Meshing.ConstraintOptions options =
-            new TriangleNet.Meshing.ConstraintOptions() { ConformingDelaunay = true };
-        TriangleNet.Meshing.GenericMesher mesher = new TriangleNet.Meshing.GenericMesher();
-        TriangleNet.Meshing.IMesh mesh = mesher.Triangulate(polygon);
-
-        Path polygonAsClip = parentPoly.ClipperPath(HelperFunctions.clipperScale);
-        Paths solution = new Paths();
-
-        List<SubdividableEdgeLoop> children = new List<SubdividableEdgeLoop>();
-
-        foreach (TriangleNet.Topology.Triangle tri in mesh.Triangles) 
-        {
-            Path triPath = new Path();
-            for (int j = 0; j < 3; j++)
-            {
-                TriangleNet.Geometry.Vertex vert = tri.GetVertex(j);
-                triPath.Add(new IntPoint((int)(vert[0] * HelperFunctions.clipperScale), (int)(vert[1] * HelperFunctions.clipperScale)));
-            }
-
-            Paths thisSolution = new Paths();
-            Clipper clipper = new Clipper();
-            clipper.AddPath(triPath, PolyType.ptSubject, true);
-            clipper.AddPath(polygonAsClip, PolyType.ptClip, true);
-            clipper.Execute(ClipType.ctIntersection, thisSolution);
-            //possibility that this op produces more than one region. So we add all to final solution
-            foreach (Path thisSolutionPart in thisSolution)
-            {
-                solution.Add(thisSolutionPart);
-            }
-        }
-
-        //foreach (Path solutionPath in solution) 
-        //{
-        //    children.Add(parent.GetNextChild(ClipperAddOns.PointsFromClipperPath(solutionPath, HelperFunctions.clipperScale)));
-        //}
-
-        //edges = new List<Vector4>();
-        //foreach (Vector2 crossing in edgeCrossings)
-        //{
-        //    edges.Add(new Vector4(crossing.x, crossing.y, centroid.x, centroid.y));
-        //}
-
-        return children;
+        return CollectChildren(parent, dividingEdges);
     }
 }

@@ -8,7 +8,7 @@ using ClipperLib;
 using Path = System.Collections.Generic.List<ClipperLib.IntPoint>;
 using Paths = System.Collections.Generic.List<System.Collections.Generic.List<ClipperLib.IntPoint>>;
 
-public class CitySkeleton : ISubDivScheme <SubdividableEdgeLoop>
+public class CitySkeleton : EdgeLoopSubdivider<CityEdge>//ISubDivScheme <SubdividableEdgeLoop>
 {
     private Vector2[] cityEntrences;
     private int potentialRoadPoints;
@@ -18,8 +18,7 @@ public class CitySkeleton : ISubDivScheme <SubdividableEdgeLoop>
         this.potentialRoadPoints = potentialRoadPoints;
     }
 
-
-    public List<SubdividableEdgeLoop> GetChildren(SubdividableEdgeLoop parent)
+    public override List<SubdividableEdgeLoop<CityEdge>> GetChildren (SubdividableEdgeLoop<CityEdge> parent)
     {
         Polygon parentPoly = parent.GetPolygon();
         //generate points of interest
@@ -62,84 +61,24 @@ public class CitySkeleton : ISubDivScheme <SubdividableEdgeLoop>
         TriangleNet.Meshing.GenericMesher mesher = new TriangleNet.Meshing.GenericMesher();
         TriangleNet.Meshing.IMesh mesh = mesher.Triangulate(polygon);
 
-        Path polygonAsClip = parentPoly.ClipperPath(HelperFunctions.clipperScale);
-        //Paths solution = new Paths();
-
-        //List<Subdividable> children = new List<Subdividable>();
-
-        //foreach (TriangleNet.Topology.Triangle tri in mesh.Triangles) 
-        //{
-        //    Path triPath = new Path();
-        //    for (int j = 0; j < 3; j++)
-        //    {
-        //        TriangleNet.Geometry.Vertex vert = tri.GetVertex(j);
-        //        triPath.Add(new IntPoint((int)(vert[0] * HelperFunctions.clipperScale), (int)(vert[1] * HelperFunctions.clipperScale)));
-        //    }
-
-        //    Paths thisSolution = new Paths();
-        //    Clipper clipper = new Clipper();
-        //    clipper.AddPath(triPath, PolyType.ptSubject, true);
-        //    clipper.AddPath(polygonAsClip, PolyType.ptClip, true);
-        //    clipper.Execute(ClipType.ctIntersection, thisSolution);
-        //    //possibility that this op produces more than one region. So we add all to final solution
-        //    foreach (Path thisSolutionPart in thisSolution)
-        //    {
-        //        solution.Add(thisSolutionPart);
-        //    }
-        //}
-
-        //foreach (Path solutionPath in solution) 
-        //{
-        //    children.Add(parent.GetNextChild(ClipperAddOns.PointsFromClipperPath(solutionPath, HelperFunctions.clipperScale)));
-        //}
-
         //get vertices as list
         ICollection<TriangleNet.Geometry.Vertex> vertices = mesh.Vertices;
         TriangleNet.Geometry.Vertex[] vertexList = new TriangleNet.Geometry.Vertex[vertices.Count];
         vertices.CopyTo(vertexList, 0);
         IEnumerable<TriangleNet.Geometry.Edge> meshEdges = mesh.Edges;
 
-        Paths edgePaths = new Paths();
+        //build a list of dividing edges and pass it to the child collector
+        List<DividingEdge> dividingEdges = new List<DividingEdge>();
+        ILinkedGraphEdgeFactory<CityEdge> factory = new CityEdgeFactory();
+
         foreach (TriangleNet.Geometry.Edge edge in meshEdges) {
             Vector2 a = new Vector2((float)vertexList[edge.P0].X, (float)vertexList[edge.P0].Y);
             Vector2 b = new Vector2((float)vertexList[edge.P1].X, (float)vertexList[edge.P1].Y);
 
-            Path edgePath = new Path();
-            edgePath.Add(HelperFunctions.GetIntPoint(a));
-            edgePath.Add(HelperFunctions.GetIntPoint(b));
-
-            PolyTree clippedResults = new PolyTree();
-            Clipper clipper = new Clipper();
-
-            clipper.AddPath(edgePath, PolyType.ptSubject, false);
-            clipper.AddPath(polygonAsClip, PolyType.ptClip, true);
-            clipper.Execute(ClipType.ctIntersection, clippedResults);
-
-            edgePaths.AddRange(Clipper.OpenPathsFromPolyTree(clippedResults));
+            dividingEdges.Add(new DividingEdge(a, b, factory, CityEdgeType.LandPath));
         }
 
-
-        ILinkedGraphEdgeFactory<EdgeLoopEdge> factory = new EdgeLoopEdgeFactory();
-        List<EdgeLoopEdge> knownEdges = new List<EdgeLoopEdge>(parent.GetEdgesEnumerable());
-        foreach (Path edgePath in edgePaths)
-        {
-            for (int i = 0; i < edgePath.Count-1; i ++)
-            {
-                Vector2 p1 = HelperFunctions.GetPoint(edgePath[i]);
-                Vector2 p2 = HelperFunctions.GetPoint(edgePath[i+1]);
-                LinkedGraph<EdgeLoopEdge>.ConnectNewEdge(p1, p2, factory, knownEdges);
-            }
-        }
-
-        List<EdgeLoopEdge[]> formedChildLoops = parent.GetInteriorEdgeLoops();
-        List<SubdividableEdgeLoop> children = new List<SubdividableEdgeLoop>();
-        foreach (EdgeLoopEdge[] childLoop in formedChildLoops)
-        {
-            children.Add(parent.GetNextChild(childLoop));
-        }
-
-
-        return children;
+        return CollectChildren(parent, dividingEdges);
     }
 
     struct RoadDestination
