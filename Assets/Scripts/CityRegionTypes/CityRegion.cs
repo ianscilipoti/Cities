@@ -10,10 +10,12 @@ public abstract class CityRegion : SubdividableEdgeLoop<CityEdge>
     public string descriptor { get; set; }
 
     public City rootCity;
+    public int depth { get; }
 
-    public CityRegion(CityEdge[] edges, City rootCity, bool isSubdividable) : base(edges, isSubdividable)
+    public CityRegion(CityEdge[] edges, City rootCity, bool isSubdividable, int depth) : base(edges, isSubdividable)
     {
         this.rootCity = rootCity;
+        this.depth = depth;
     }
 
     //each city region type must specify when it generates
@@ -42,6 +44,35 @@ public abstract class CityRegion : SubdividableEdgeLoop<CityEdge>
         }
 
         return false;
+    }
+
+    public void DebugDrawRecursiveLayered(float strength)
+    {
+        Color drawCol = getDebugColor();
+
+        EnumerateEdges((EdgeLoopEdge eachEdge_) =>
+        {
+            UnityEngine.Debug.DrawLine(HelperFunctions.projVec2(eachEdge_.a.pt) + Vector3.up * depth * 40, HelperFunctions.projVec2(eachEdge_.b.pt) + Vector3.up * depth * 40, drawCol);
+        });
+        //drawCol = Color.white;
+        //if (!IsConvex())
+        //{
+        //    drawCol = Color.red;
+        //}
+        //Debug.DrawLine(HelperFunctions.projVec2(GetPolygon().centroid), HelperFunctions.projVec2(GetPolygon().centroid) + Vector3.up * 0.1f, drawCol);
+
+        foreach (var child in children)
+        {
+            if (child is CityRegion)
+            {
+                ((CityRegion)child).DebugDrawRecursiveLayered(strength);
+            }
+            else
+            {
+                child.DebugDrawRecursive(strength);
+            }
+
+        }
     }
 
 }

@@ -11,9 +11,9 @@ using Paths = System.Collections.Generic.List<System.Collections.Generic.List<Cl
 public class GetPieSections <EdgeType> : EdgeLoopSubdivider<EdgeType> where EdgeType : EdgeLoopEdge
 {
     private ILinkedGraphEdgeFactory<EdgeType> factory;
-    private System.Object factoryParams;
+    private System.Object[] factoryParams;
 
-    public GetPieSections (ILinkedGraphEdgeFactory<EdgeType> factory, System.Object factoryParams)
+    public GetPieSections (ILinkedGraphEdgeFactory<EdgeType> factory, System.Object[] factoryParams)
     {
         this.factory = factory;
         this.factoryParams = factoryParams;
@@ -21,13 +21,13 @@ public class GetPieSections <EdgeType> : EdgeLoopSubdivider<EdgeType> where Edge
 
     public override List<SubdividableEdgeLoop<EdgeType>> GetChildren(SubdividableEdgeLoop<EdgeType> parent)
     {
-
-        Polygon parentPoly = new Polygon(parent.GetSimplifiedPoints(1f * Mathf.Deg2Rad));
+        Vector2[] simplifiedPoints = parent.GetSimplifiedPoints(1f * Mathf.Deg2Rad);
+        Polygon parentPoly = new Polygon(simplifiedPoints);
         Vector2 centroid = parentPoly.centroid;
         List<Vector2> edgeCrossings = new List<Vector2>();
         parentPoly.EnumerateEdges((Edge edge) =>
         {
-            Vector2 edgeCrossing = Vector2.Lerp(edge.a, edge.b, Random.Range(0.4f, 0.6f));
+            Vector2 edgeCrossing = HelperFunctions.ScaleFrom(Vector2.Lerp(edge.a, edge.b, Random.Range(0.4f, 0.6f)), centroid, 1.5f);
             edgeCrossings.Add(edgeCrossing);
             //points.Add(HelperFunctions.ScaleFrom(edgeCrossing, centroid, 5));
         });

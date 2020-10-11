@@ -7,7 +7,7 @@ using Polygon = EPPZ.Geometry.Model.Polygon;
 
 public class Park : CityRegion
 {
-    public Park (CityEdge[] edges, City cityRoot) : base(edges, cityRoot, false) {
+    public Park (CityEdge[] edges, City cityRoot, int depth) : base(edges, cityRoot, false, depth) {
     }
 
 	public override Color getDebugColor()
@@ -22,6 +22,7 @@ public class Park : CityRegion
 
     public override SubdividableEdgeLoop<CityEdge> GetNextChild (CityEdge[] edges) 
     {
+        //return new Plot(edges, rootCity);
         return null;//unsubdividable
     }
 
@@ -29,5 +30,10 @@ public class Park : CityRegion
     //this function could randomize what subdivscheme is returned easily
     public override ISubDivScheme<SubdividableEdgeLoop<CityEdge>> GetDivScheme () {
         return null;//unsubdividable
+        //if(Random.value > 0.01f)
+        //{
+        //return new GetBlocks(4, 3);
+        //}
+        //return null;
     }
 }

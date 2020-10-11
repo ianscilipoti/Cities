@@ -1,20 +1,28 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using EPPZ.Geometry.AddOns;
+using EPPZ.Geometry;
 
 public class ClassTesting : MonoBehaviour
 {
-	private void Start()
+    public float inAngle;
+    public float angle;
+    public Rect bounds;
+	private void Update()
 	{
-        LinkedGraphVertex a = new LinkedGraphVertex(Vector2.zero);
-        LinkedGraphVertex b = new LinkedGraphVertex(Vector2.one);
-        EdgeLoopEdge test = new EdgeLoopEdge(a, b);
+        List<Vector2> p = new List<Vector2>();
+        p.Add(new Vector2(0, 0));
+        p.Add(new Vector2(2, 0));
+        p.Add(new Vector2(1.5f, 1));
+        p.Add(new Vector2(0.5f, 1));
 
-        LinkedGraphEdge test1 = test;
-
-        if (test == test1)
+        for (int i = 0; i < 4; i ++)
         {
-            print("yes!");
+            p[i] = p[i].RotatedAround(Vector2.zero, inAngle);
         }
+
+        bounds = HelperFunctions.GetOrientedBounds(p, ref angle);
+        angle *= Mathf.Rad2Deg;
 	}
 }

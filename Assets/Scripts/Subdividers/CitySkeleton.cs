@@ -12,24 +12,32 @@ public class CitySkeleton : EdgeLoopSubdivider<CityEdge>//ISubDivScheme <Subdivi
 {
     private Vector2[] cityEntrences;
     private int potentialRoadPoints;
+    private System.Object[] factoryParams;
 
-    public CitySkeleton (Vector2[] cityEntrences, int potentialRoadPoints) {
+    public CitySkeleton (Vector2[] cityEntrences, int potentialRoadPoints, System.Object[] factoryParams) {
         this.cityEntrences = cityEntrences;
         this.potentialRoadPoints = potentialRoadPoints;
+        this.factoryParams = factoryParams;
     }
 
     public override List<SubdividableEdgeLoop<CityEdge>> GetChildren (SubdividableEdgeLoop<CityEdge> parent)
     {
+        Vector2[] parentPoints = parent.GetPoints();
         Polygon parentPoly = parent.GetPolygon();
         //generate points of interest
         List<RoadDestination> pointsOfInterest = new List<RoadDestination>();
         Vector2 centroid = parent.GetCenter();
-        parent.EnumerateEdges((EdgeLoopEdge edge) =>
-        {
-            pointsOfInterest.Add(new RoadDestination(HelperFunctions.ScaleFrom(Vector2.Lerp(edge.a.pt, edge.b.pt, Random.Range(0.2f, 0.8f)), centroid, 5), 1, false, true));
-        });
+        //parent.EnumerateEdges((EdgeLoopEdge edge) =>
+        //{
+        //    pointsOfInterest.Add(new RoadDestination(Vector2.Lerp(edge.a.pt, edge.b.pt, Random.Range(0.2f, 0.8f)), 1, false, true));
+        //});
         Rect bounds = parent.GetBounds();
+        bounds.width = bounds.width * 2;
+        bounds.height = bounds.height * 2;
         int potentialRoadPointsRt = Mathf.CeilToInt(Mathf.Sqrt(potentialRoadPoints));
+
+        float approxDiameter = Mathf.Sqrt(parentPoly.area);
+        float minimumPerimeterDistance = approxDiameter / 4f;
 
         for (int x = 0; x < potentialRoadPointsRt; x++)
         {
@@ -38,13 +46,18 @@ public class CitySkeleton : EdgeLoopSubdivider<CityEdge>//ISubDivScheme <Subdivi
                 Vector2 point = new Vector2((x / (float)potentialRoadPointsRt) * bounds.width + bounds.xMin,
                                             (y / (float)potentialRoadPointsRt) * bounds.height + bounds.yMin);
                 float distBtwnPts = (bounds.width + bounds.height) / (potentialRoadPoints * 2);
-                point = point + new Vector2(Random.Range(-1f, 1f), Random.Range(-1, 1f)) * distBtwnPts * 0.8f;
-                if (parentPoly.ContainsPoint(point))
+                point = point + new Vector2(Random.Range(-1f, 1f), Random.Range(-1, 1f)) * distBtwnPts * 3f;
+
+                if (parentPoly.ContainsPoint(point)) // && parent.DistToPerimeter(point) > minimumPerimeterDistance)
                 {
-                    pointsOfInterest.Add(new RoadDestination(point, 0, false, false));
+                    pointsOfInterest.Add(new RoadDestination(point, 0, false, false));  
                 }
             } 
         }
+        pointsOfInterest.Add(new RoadDestination(bounds.center + new Vector2(bounds.width * 100, bounds.height * 100), 0, false, false)); 
+        pointsOfInterest.Add(new RoadDestination(bounds.center + new Vector2(bounds.width * 100, -bounds.height * 100), 0, false, false)); 
+        pointsOfInterest.Add(new RoadDestination(bounds.center + new Vector2(-bounds.width * 100, -bounds.height * 100), 0, false, false)); 
+        pointsOfInterest.Add(new RoadDestination(bounds.center + new Vector2(-bounds.width * 100, bounds.height * 100), 0, false, false)); 
 
         //triangulate points of interest to get potential road segments
         TriangleNet.Geometry.Polygon polygon = new TriangleNet.Geometry.Polygon();
@@ -61,22 +74,50 @@ public class CitySkeleton : EdgeLoopSubdivider<CityEdge>//ISubDivScheme <Subdivi
         TriangleNet.Meshing.GenericMesher mesher = new TriangleNet.Meshing.GenericMesher();
         TriangleNet.Meshing.IMesh mesh = mesher.Triangulate(polygon);
 
-        //get vertices as list
-        ICollection<TriangleNet.Geometry.Vertex> vertices = mesh.Vertices;
-        TriangleNet.Geometry.Vertex[] vertexList = new TriangleNet.Geometry.Vertex[vertices.Count];
-        vertices.CopyTo(vertexList, 0);
-        IEnumerable<TriangleNet.Geometry.Edge> meshEdges = mesh.Edges;
+        TriangleNet.Voronoi.StandardVoronoi voronoi = new TriangleNet.Voronoi.StandardVoronoi((TriangleNet.Mesh)mesh);
+        IEnumerable<TriangleNet.Geometry.IEdge> voronoiEdges = voronoi.Edges;
+        List<TriangleNet.Topology.DCEL.Vertex> voronoiVerts = voronoi.Vertices;
 
-        //build a list of dividing edges and pass it to the child collector
         List<DividingEdge> dividingEdges = new List<DividingEdge>();
         ILinkedGraphEdgeFactory<CityEdge> factory = new CityEdgeFactory();
 
-        foreach (TriangleNet.Geometry.Edge edge in meshEdges) {
-            Vector2 a = new Vector2((float)vertexList[edge.P0].X, (float)vertexList[edge.P0].Y);
-            Vector2 b = new Vector2((float)vertexList[edge.P1].X, (float)vertexList[edge.P1].Y);
+        foreach(TriangleNet.Geometry.IEdge edge in voronoiEdges)
+        {
+            Vector2 a = new Vector2((float)voronoiVerts[edge.P0].X, (float)voronoiVerts[edge.P0].Y);
+            Vector2 b = new Vector2((float)voronoiVerts[edge.P1].X, (float)voronoiVerts[edge.P1].Y);
 
-            dividingEdges.Add(new DividingEdge(a, b, factory, CityEdgeType.LandPath));
+            dividingEdges.Add(new DividingEdge(a, b, factory, factoryParams));
         }
+
+
+
+
+        //get vertices as list
+        //ICollection<TriangleNet.Geometry.Vertex> vertices = mesh.Vertices;
+        //TriangleNet.Geometry.Vertex[] vertexList = new TriangleNet.Geometry.Vertex[vertices.Count];
+        //vertices.CopyTo(vertexList, 0);
+        //IEnumerable<TriangleNet.Geometry.Edge> meshEdges = mesh.Edges;
+
+
+        //build a list of dividing edges and pass it to the child collector
+
+
+        //foreach (TriangleNet.Geometry.Edge edge in meshEdges) {
+        //    //if (vertConnections[edge.P0] > 4)
+        //    //{
+        //    //    vertConnections[edge.P0]--;
+        //    //    continue;
+        //    //}
+        //    //if (vertConnections[edge.P1] > 4)
+        //    //{
+        //    //    vertConnections[edge.P1]--;
+        //    //    continue;
+        //    //}
+        //    Vector2 a = new Vector2((float)vertexList[edge.P0].X, (float)vertexList[edge.P0].Y);
+        //    Vector2 b = new Vector2((float)vertexList[edge.P1].X, (float)vertexList[edge.P1].Y);
+
+        //    dividingEdges.Add(new DividingEdge(a, b, factory, CityEdgeType.LandPath));
+        //}
 
         return CollectChildren(parent, dividingEdges);
     }

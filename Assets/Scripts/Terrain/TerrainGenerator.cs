@@ -5,12 +5,14 @@ using UnityEngine;
 public class TerrainGenerator : TextureSampler
 {
     private float scale;
-    public TerrainGenerator (float scale)
+    private float maxElevation;
+    public TerrainGenerator (float scale, float maxElevation)
     {
-        this.scale = scale; 
+        this.scale = scale;
+        this.maxElevation = maxElevation;
     }
     public float get (float x, float y)
     {
-        return Mathf.PerlinNoise(x / scale, y / scale); 
+        return Mathf.PerlinNoise(x / scale, y / scale) * maxElevation; 
     }
 }

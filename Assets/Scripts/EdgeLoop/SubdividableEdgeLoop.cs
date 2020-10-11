@@ -7,20 +7,20 @@ using System.Linq;
 //provides functionality to recursively subdivide a region defined by an edge loop
 //requires a subdivision scheme to format the subdivision pattern
 //and a getNextChild to randomly choose the types of objects representing the children
-public class SubdividableEdgeLoop <EdgeType> : EdgeLoop<EdgeType>, Subdividable where EdgeType : EdgeLoopEdge
+public class SubdividableEdgeLoop<EdgeType> : EdgeLoop<EdgeType>, Subdividable where EdgeType : EdgeLoopEdge
 {
     private Rect bounds;
-    private List<SubdividableEdgeLoop<EdgeType>> children;
+    protected List<SubdividableEdgeLoop<EdgeType>> children;
     private bool isSubdividable;
     private bool isSubdivided;
 
-    public SubdividableEdgeLoop (EdgeType[] edges, bool subdividable) : base(edges)
+    public SubdividableEdgeLoop(EdgeType[] edges, bool subdividable) : base(edges)
     {
         children = new List<SubdividableEdgeLoop<EdgeType>>();
         isSubdividable = subdividable;
     }
 
-    public SubdividableEdgeLoop<EdgeType>[] GetChildren ()
+    public SubdividableEdgeLoop<EdgeType>[] GetChildren()
     {
         return children.ToArray();
     }
@@ -30,19 +30,38 @@ public class SubdividableEdgeLoop <EdgeType> : EdgeLoop<EdgeType>, Subdividable 
         return null;//new GetPieSections();
     }
 
-    public virtual SubdividableEdgeLoop<EdgeType> GetNextChild (EdgeType[] edges)
+    public virtual SubdividableEdgeLoop<EdgeType> GetNextChild(EdgeType[] edges)
     {
         return new SubdividableEdgeLoop<EdgeType>(edges, true);
     }
 
-    public bool IsSubdividable ()
+    public bool IsSubdividable()
     {
         return isSubdividable;
     }
 
-    public bool IsSubdivided () 
+    public bool IsSubdivided()
     {
         return isSubdivided;
+    }
+
+    protected bool VerifyRecursive ()
+    {
+        if (!Verify())
+        {
+            return false;
+        }
+        else
+        {
+            foreach (var child in children)
+            {
+                if (!child.VerifyRecursive())
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     public List<EdgeType[]> GetInteriorEdgeLoops()
@@ -81,25 +100,38 @@ public class SubdividableEdgeLoop <EdgeType> : EdgeLoop<EdgeType>, Subdividable 
             {
                 continue;//we've found both loops associated with this edge
             }
-            EdgeType[] ccwLoop = GetLocalLoop(edge, true).ToArray();
-            EdgeType[] cwLoop = GetLocalLoop(edge, false).ToArray();
+            List<EdgeType> ccwLoopList = GetLocalLoop(edge, true);
+            List<EdgeType> cwLoopList = GetLocalLoop(edge, false);
+
+            EdgeType[] ccwLoop = null;
+            EdgeType[] cwLoop = null;
+
+            if (ccwLoopList == null || cwLoopList == null)
+            {
+                Debug.LogWarning("Loop was null.");
+            }
+            else
+            {
+                ccwLoop = ccwLoopList.ToArray();
+                cwLoop = cwLoopList.ToArray(); 
+            }
 
             bool existingCcwLoop = false;
             bool existingCwLoop = false;
 
             foreach (EdgeType[] foundLoop in edgeLoopCounts[edge])
             {
-                if (IsEqual(foundLoop, ccwLoop))
+                if (ccwLoop != null && IsEqual(foundLoop, ccwLoop))
                 {
                     existingCcwLoop = true;
                 }
-                if (IsEqual(foundLoop, cwLoop))
+                if (cwLoop != null && IsEqual(foundLoop, cwLoop))
                 {
                     existingCwLoop = true;
                 }
             }
 
-            if (!existingCcwLoop)
+            if (!existingCcwLoop && ccwLoop != null)
             {
                 foreach (EdgeType subEdge in ccwLoop)
                 {
@@ -111,7 +143,7 @@ public class SubdividableEdgeLoop <EdgeType> : EdgeLoop<EdgeType>, Subdividable 
 
                 foundLoops.Add(ccwLoop);
             }
-            if (!existingCwLoop)
+            if (!existingCwLoop && cwLoop != null)
             {
                 foreach (EdgeType subEdge in cwLoop)
                 {
@@ -133,6 +165,9 @@ public class SubdividableEdgeLoop <EdgeType> : EdgeLoop<EdgeType>, Subdividable 
         {
             return true;
         }
+
+        GenerateMeshes();
+
         ISubDivScheme<SubdividableEdgeLoop<EdgeType>> subdivScheme = GetDivScheme();
         if (subdivScheme != null)
         {
@@ -145,6 +180,11 @@ public class SubdividableEdgeLoop <EdgeType> : EdgeLoop<EdgeType>, Subdividable 
             return false;
         }
 	}
+
+    public virtual void GenerateMeshes ()
+    {
+        
+    }
 
     //public void SubdivideRecursive ()
     //{
@@ -175,6 +215,10 @@ public class SubdividableEdgeLoop <EdgeType> : EdgeLoop<EdgeType>, Subdividable 
             if (!IsConvex())
             {
                 drawCol = Color.red;
+            }
+            if (isSubdividable)
+            {
+                drawCol = Color.green;
             }
             Debug.DrawLine(HelperFunctions.projVec2(GetPolygon().centroid), HelperFunctions.projVec2(GetPolygon().centroid) + Vector3.up * 0.1f, drawCol);
         }

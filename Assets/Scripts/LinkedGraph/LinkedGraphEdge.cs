@@ -11,8 +11,6 @@ public class LinkedGraphEdge
     public Segment segRef;
     private List<IEdgeSplitListener> listeners;
 
-    public const float VERT_MERGE_DIST_SQR = 0.001f;
-
     public delegate bool SearchFilter(LinkedGraphEdge theEdge);
 
     public LinkedGraphEdge (LinkedGraphVertex a, LinkedGraphVertex b)
@@ -71,6 +69,16 @@ public class LinkedGraphEdge
     public bool isConnectedTo (LinkedGraphEdge other)
     {
         return GetSharedVertex(other) != null;
+    }
+
+    public bool IsEqual (LinkedGraphEdge other)
+    {
+        if ((a == other.a || a == other.b) &&
+            (b == other.a || b == other.b))
+        {
+            return true;
+        }
+        return false;
     }
 
     public List<EdgeType> CollectEdges <EdgeType> (bool allConsecutive, SearchFilter filter) where EdgeType : LinkedGraphEdge

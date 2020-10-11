@@ -8,12 +8,16 @@ using Polygon = EPPZ.Geometry.Model.Polygon;
 //a plot is a type of cityRegion that cannot be subdivided more. This is a technical classification that allows actual generation to happen
 public class Plot : CityRegion
 {
-    public Plot (CityEdge[] edges, City cityRoot) : base(edges, cityRoot, false) {
+    private City city;
+    private bool park;
+    public Plot (CityEdge[] edges, City cityRoot, bool park, int depth) : base(edges, cityRoot, true, depth) {
+        city = cityRoot;
+        this.park = park;
     }
 
     public override SubdividableEdgeLoop<CityEdge> GetNextChild (CityEdge[] edges) 
     {
-        return null;//new Block(boundary, rootCity);
+        return new BuildablePlot(edges, rootCity, park, depth+1);
     }
 
     public override int GetGenerationPass()
@@ -29,6 +33,6 @@ public class Plot : CityRegion
 	//Cities always subdivide with citySkeleton
 	//this function could randomize what subdivscheme is returned easily
 	public override ISubDivScheme<SubdividableEdgeLoop<CityEdge>> GetDivScheme () {
-        return null;//new GetBlocks(10, 5);
+        return new GetBuildablePlot(city);
     }
 }

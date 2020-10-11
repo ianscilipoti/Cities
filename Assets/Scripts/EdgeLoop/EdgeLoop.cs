@@ -4,10 +4,12 @@ using UnityEngine;
 using EPPZ.Geometry.Model;
 
 //should be a ccw loop of edges
-public class EdgeLoop <EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopEdge
+public class EdgeLoop<EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopEdge
 {
     protected List<EdgeType> edges;
     private Rect bounds;
+
+    private const int MAXLOOPSIZE = 100;
 
     public EdgeLoop(EdgeType[] edges)
     {
@@ -25,6 +27,17 @@ public class EdgeLoop <EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopE
         }
     }
 
+    public float DistToPerimeter (Vector2 pt)
+    {
+        float minDist = float.MaxValue;
+        foreach (EdgeType edge in edges)
+        {
+            float dist = HelperFunctions.SegmentPointDist(edge.a.pt, edge.b.pt, pt);
+            minDist = Mathf.Min(dist, minDist);
+        }
+        return minDist;
+    }
+
     public List<EdgeType> GetLocalLoop(EdgeType startingEdge, bool ccw)
     {
         List<EdgeType> foundEdges = new List<EdgeType>();
@@ -33,7 +46,7 @@ public class EdgeLoop <EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopE
         LinkedGraphVertex firstVertex = startingEdge.a;
         LinkedGraphVertex lastVertex = startingEdge.b;
         bool foundLoop = false;
-
+        int edgesSeen = 0;
         while (!foundLoop)
         {
             EdgeLoopEdge lastEdge = foundEdges[foundEdges.Count - 1];
@@ -44,6 +57,7 @@ public class EdgeLoop <EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopE
 
             if (lastVertex.NumConnections() <= 1)
             {
+                Debug.LogWarning("Reached end of loop while collecting loop.");
                 return null;
             }
 
@@ -75,6 +89,17 @@ public class EdgeLoop <EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopE
                         Debug.LogWarning("Could not isolate loop because connected edges were not EdgeLoopEdges");
                     }
                 }
+                edgesSeen++;
+                if (edgesSeen > MAXLOOPSIZE)
+                {
+                    Debug.LogWarning("Couldn't close loop. Failing");
+                    DebugLines debug = GameObject.FindObjectOfType<DebugLines>();
+                    foreach (EdgeType edge in foundEdges)
+                    {
+                        debug.AddEdge(edge, Color.red);
+                    }
+                    return null;
+                }
             }
 
             foundEdges.Add(minAngleEdge);
@@ -94,10 +119,10 @@ public class EdgeLoop <EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopE
         return foundEdges;
     }
 
-    public EdgeLoop(Vector2[] points, ILinkedGraphEdgeFactory<EdgeType> factory, Object factoryParams)
+    public EdgeLoop(Vector2[] points, ILinkedGraphEdgeFactory<EdgeType> factory, Object[] factoryParams)
     {
         LinkedGraphVertex[] verts = new LinkedGraphVertex[points.Length];
-        for (int i = 0; i < verts.Length; i ++)
+        for (int i = 0; i < verts.Length; i++)
         {
             verts[i] = new LinkedGraphVertex(points[i]);
         }
@@ -121,15 +146,22 @@ public class EdgeLoop <EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopE
         }
     }
 
-    public static EdgeType[] GetPolygonEdges (int sides, float radius, float radiusRandomness, ILinkedGraphEdgeFactory<EdgeType> factory, System.Object factoryParams)
+    public static EdgeType[] GetPolygonEdges(int sides, float radius, float radiusRandomness, float randomnessRangeDetail, ILinkedGraphEdgeFactory<EdgeType> factory, System.Object[] factoryParams)
     {
         LinkedGraphVertex[] verts = new LinkedGraphVertex[sides];
         EdgeType[] edges = new EdgeType[sides];
 
+        float noiseOffset = Random.value * 10000f;
         for (int i = 0; i < sides; i++)
         {
-            float angle = (i / (float)sides) * Mathf.PI * 2;
-            verts[i] = new LinkedGraphVertex(new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * (radius + Random.Range(-radiusRandomness, radiusRandomness)));
+            float t = (i / (float)sides);
+            float angle = t * Mathf.PI * 2;
+
+            Vector2 unitCircle = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+            Vector2 position = unitCircle * radius;
+            float noise = Mathf.PerlinNoise(position.x / randomnessRangeDetail + noiseOffset, position.y / randomnessRangeDetail) - 0.5f;
+            Vector2 modPosition = unitCircle * (radius + noise * radiusRandomness);
+            verts[i] = new LinkedGraphVertex(modPosition);
         }
 
         for (int i = 0; i < sides; i++)
@@ -142,7 +174,7 @@ public class EdgeLoop <EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopE
     }
 
     //check to see if an edge in this loop follows the ccw
-    public bool EdgeFollowsWinding (EdgeType edge)
+    public bool EdgeFollowsWinding(EdgeType edge)
     {
         int ind = edges.IndexOf(edge);
         if (ind == -1)
@@ -152,7 +184,7 @@ public class EdgeLoop <EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopE
         }
         //get the vertex on first edge that is shared by the first two edges
         LinkedGraphVertex lastVertex = edges[0].GetSharedVertex(edges[1]);
-        for (int i = 0; i < edges.Count; i ++)
+        for (int i = 0; i < edges.Count; i++)
         {
             if (i > 0)
             {
@@ -206,9 +238,9 @@ public class EdgeLoop <EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopE
         }
     }
 
-    public bool Verify () 
+    public bool Verify()
     {
-        for (int i = 0; i < edges.Count; i ++)
+        for (int i = 0; i < edges.Count; i++)
         {
             int nextIndex = (i + 1) % (edges.Count);
             if (!edges[i].isConnectedTo(edges[nextIndex]))
@@ -224,21 +256,38 @@ public class EdgeLoop <EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopE
         return edges;
     }
 
-    public EdgeType[] GetEdges ()
+    public EdgeType[] GetEdges()
     {
         return edges.ToArray();
     }
 
     //search delegate
-    protected bool EdgeWithinLoop (LinkedGraphEdge theEdge)
+    protected bool EdgeWithinLoop(LinkedGraphEdge theEdge)
     {
+        if (!(theEdge is EdgeType))
+        {
+            return false;
+        }
+        EdgeType castEdge = (EdgeType)theEdge;
         Polygon poly = GetPolygon();
-        if ((poly.PermiterContainsPoint(theEdge.a.pt, Segment.defaultAccuracy*2) || poly.ContainsPoint(theEdge.a.pt)) &&
-            (poly.PermiterContainsPoint(theEdge.b.pt, Segment.defaultAccuracy*2) || poly.ContainsPoint(theEdge.b.pt)))
+
+        Vector2 edgeCenter = (theEdge.a.pt + theEdge.b.pt) / 2f;
+
+        if(edges.Contains(castEdge) || poly.ContainsPoint(edgeCenter))
         {
             return true;
         }
-        return false;
+        else
+        {
+            return false;
+        }
+
+        //if ((poly.PermiterContainsPoint(theEdge.a.pt, Segment.defaultAccuracy*2) || poly.ContainsPoint(theEdge.a.pt)) &&
+        //    (poly.PermiterContainsPoint(theEdge.b.pt, Segment.defaultAccuracy*2) || poly.ContainsPoint(theEdge.b.pt)))
+        //{
+        //    return true;
+        //}
+        //return false;
     }
 
     public static bool IsEqual (EdgeLoop<EdgeType> a, EdgeLoop<EdgeType> b)
@@ -396,6 +445,7 @@ public class EdgeLoop <EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopE
         {
             drawCol = Color.red;
         }
+
         Debug.DrawLine(HelperFunctions.projVec2(GetPolygon().centroid), HelperFunctions.projVec2(GetPolygon().centroid) + Vector3.up * 0.1f, drawCol);
     }
 

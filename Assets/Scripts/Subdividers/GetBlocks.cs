@@ -11,16 +11,14 @@ using Paths = System.Collections.Generic.List<System.Collections.Generic.List<Cl
 
 public class GetBlocks : EdgeLoopSubdivider<CityEdge>
 {
-    public int columns;
-    public int rows;
+    private System.Object[] factoryParams;
 
-    public GetBlocks (int columns, int rows)
+    public GetBlocks(System.Object[] factoryParams)
     {
-        this.columns = columns;
-        this.rows = rows;
+        this.factoryParams = factoryParams;
     }
 
-    public override List<SubdividableEdgeLoop<CityEdge>> GetChildren (SubdividableEdgeLoop<CityEdge> parent) 
+    public override List<SubdividableEdgeLoop<CityEdge>> GetChildren(SubdividableEdgeLoop<CityEdge> parent)
     {
         Polygon parentPoly = parent.GetPolygon();
         Path polygonAsClip = parentPoly.ClipperPath(HelperFunctions.clipperScale);
@@ -31,7 +29,7 @@ public class GetBlocks : EdgeLoopSubdivider<CityEdge>
         parent.EnumerateEdges((EdgeLoopEdge edge) =>
         {
             float edgeLength = Vector2.Distance(edge.a.pt, edge.b.pt);
-            if (edgeLength > longestEdgeLength) 
+            if (edgeLength > longestEdgeLength)
             {
                 longestEdgeLength = edgeLength;
                 longestEdge = edge;
@@ -42,52 +40,32 @@ public class GetBlocks : EdgeLoopSubdivider<CityEdge>
 
         float angle = Mathf.Atan2(edgeDirection.y, edgeDirection.x) * Mathf.Rad2Deg;
         Rect bounds = parentPoly.bounds;
-        Rect expandedBounds = new Rect(bounds.center - bounds.size*2, bounds.size * 4);
+        float maxDimension = Mathf.Max(bounds.width, bounds.height);
+        bounds.width = maxDimension;
+        bounds.height = maxDimension;
 
-        List<DividingEdge> edgePaths = GetGridDividers(bounds, 0f);
-
-        return CollectChildren(parent, edgePaths);
-    }
-
-    private List<DividingEdge> GetGridDividers (Rect bounds, float rotDegrees)
-    {
-        Vector2 boundCenter = bounds.center;
-        Paths allCells = new Paths();
-        float cellWidth = bounds.width / columns;
-        float cellHeight = bounds.height / rows;
-
-        float clipperScale = HelperFunctions.clipperScale;
-
-        List<DividingEdge> allDividers = new List<DividingEdge>();
+        Rect expandedBounds = new Rect(bounds.center - bounds.size * 0.55f, bounds.size * 1.1f);
 
         ILinkedGraphEdgeFactory<CityEdge> factory = new CityEdgeFactory();
+        List<DividingEdge> edgePaths = new List<DividingEdge>();
+        Vector2 centroid = parentPoly.centroid;
 
-        for (int x = 0; x < columns; x++)
+        float relativeBoundAngle = 0f;
+        Rect parentRotatedBounds = HelperFunctions.GetOrientedBounds(new List<Vector2>(parentPoly.points), ref relativeBoundAngle);
+
+        float rotation = relativeBoundAngle * Mathf.Rad2Deg;
+
+
+        if (parentRotatedBounds.width > parentRotatedBounds.height * 0.7f)
         {
-            Vector2 bottom = new Vector2(GetColumnPosition(x, cellWidth, bounds), bounds.yMin).RotatedAround(boundCenter, rotDegrees);
-            Vector2 top = new Vector2(GetColumnPosition(x, cellWidth, bounds), bounds.yMax).RotatedAround(boundCenter, rotDegrees);
-
-            allDividers.Add(new DividingEdge(top, bottom, factory, CityEdgeType.LandPath));
+            //edgePaths.Add(new DividingEdge((centroid - Vector2.right * 1000f).RotatedAround(centroid, rotation), (centroid + Vector2.right * 1000f).RotatedAround(centroid, rotation), factory, factoryParams));
+            edgePaths.Add(new DividingEdge((centroid - Vector2.up * 1000f).RotatedAround(centroid, rotation), (centroid + Vector2.up * 1000f).RotatedAround(centroid, rotation), factory, factoryParams));
         }
-        for (int y = 0; y < rows; y++)
+        if (parentRotatedBounds.height > parentRotatedBounds.width * 0.7f)
         {
-            Vector2 bottom = new Vector2(bounds.xMin, GetRowPosition(y, cellHeight, bounds)).RotatedAround(boundCenter, rotDegrees);
-            Vector2 top = new Vector2(bounds.xMax, GetRowPosition(y, cellHeight, bounds)).RotatedAround(boundCenter, rotDegrees);
-
-            allDividers.Add(new DividingEdge(top, bottom, factory, CityEdgeType.LandPath));
+            //edgePaths.Add(new DividingEdge((centroid - Vector2.up * 1000f).RotatedAround(centroid, rotation), (centroid + Vector2.up * 1000f).RotatedAround(centroid, rotation), factory, factoryParams));
+            edgePaths.Add(new DividingEdge((centroid - Vector2.right * 1000f).RotatedAround(centroid, rotation), (centroid + Vector2.right * 1000f).RotatedAround(centroid, rotation), factory, factoryParams));
         }
-
-
-        return allDividers;
-    }
-
-    private float GetColumnPosition (int x, float cellWidth, Rect bounds) 
-    {
-        return x * cellWidth + bounds.xMin;
-    }
-
-    private float GetRowPosition(int y, float cellHeight, Rect bounds)
-    {
-        return y * cellHeight + bounds.yMin;
+        return CollectChildren(parent, edgePaths);
     }
 }

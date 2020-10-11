@@ -15,7 +15,7 @@ public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
         return AddEdge(aVert, bVert, edgeFactory, null, knownEdges);
     }
 
-    public static EdgeType AddEdge(LinkedGraphVertex aVert, LinkedGraphVertex bVert, ILinkedGraphEdgeFactory<EdgeType> edgeFactory, System.Object factoryParams, List<EdgeType> knownEdges)
+    public static EdgeType AddEdge(LinkedGraphVertex aVert, LinkedGraphVertex bVert, ILinkedGraphEdgeFactory<EdgeType> edgeFactory, System.Object[] factoryParams, List<EdgeType> knownEdges)
     {
         EdgeType newEdge = edgeFactory.GetEdge(aVert, bVert, factoryParams);
 
@@ -27,23 +27,76 @@ public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
         return newEdge;
     }
 
-    public static void DebugDraw (List<EdgeType> edges)
+    public static void DebugDraw(List<EdgeType> edges)
+    {
+        DebugDraw(edges, null, null);
+    }
+
+    public static void DebugDraw (List<EdgeType> edges, List<Color> colors, List<float> elevations)
     {
 
-        foreach (EdgeType edge in edges)
+        for (int i = 0; i < edges.Count; i ++)
         {
-            int colorCode = edge.GetHashCode();
-            Random.InitState(colorCode);
-
-            Debug.DrawLine(HelperFunctions.projVec2(edge.a.pt), HelperFunctions.projVec2(edge.b.pt), Random.ColorHSV());
+            EdgeType edge = edges[i];
+            Color col = Color.white;
+            float verticalOffset = 0f;
+            if (colors != null)
+            {
+                col = colors[i];
+            }
+            if (elevations != null)
+            {
+                verticalOffset = elevations[i];
+            }
+            Debug.DrawLine(HelperFunctions.projVec2(edge.a.pt) + Vector3.up * verticalOffset, HelperFunctions.projVec2(edge.b.pt) + Vector3.up * verticalOffset, col);
+            DebugVert(edge.a);
+            DebugVert(edge.b);
+            //Debug.Log(edge.a.pt + ", " + edge.b.pt);
         }
+        //Debug.Log("-----------");
+    }
+
+    private static void DebugVert (LinkedGraphVertex vert)
+    {
+        Color vCol = Color.red;
+        float len = 2f;
+        if (vert.connections.Count == 1)
+        {
+            len = 10f;
+        }
+        else if (vert.connections.Count == 2)
+        {
+            vCol = Color.green;
+        }
+        else if (vert.connections.Count == 3)
+        {
+            vCol = Color.yellow;
+        }
+        else if (vert.connections.Count == 4)
+        {
+            vCol = Color.black;
+        }
+        else if (vert.connections.Count == 5)
+        {
+            vCol = Color.white;
+        }
+        else if (vert.connections.Count > 5)
+        {
+            vCol = Color.gray;
+        }
+        Debug.DrawLine(HelperFunctions.projVec2(vert.pt), HelperFunctions.projVec2(vert.pt) + Vector3.up * len, vCol);
     }
 
     //disconnect this edge. Leaving it for the GC :(
     public static void Detach(EdgeType edge)
     {
-        edge.a.RemoveConnection(edge);
-        edge.b.RemoveConnection(edge);
+        bool removeA = edge.a.RemoveConnection(edge);
+        bool removeB = edge.b.RemoveConnection(edge);
+
+        if (!removeA || !removeB)
+        {
+            Debug.Log("Failed remove");
+        }
     }
 
     public static void SubdivideEdge(EdgeType edge, LinkedGraphVertex midPoint, ILinkedGraphEdgeFactory<EdgeType> edgeFactory, List<EdgeType> knownEdges)
@@ -66,7 +119,7 @@ public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
     }
 
     //given a list of edges that may intersect with the new edge, connect the new edge
-    public static void ConnectNewEdge(Vector2 a, Vector2 b, ILinkedGraphEdgeFactory<EdgeType> edgeFactory, System.Object factoryParams, List<EdgeType> knownEdges)
+    public static void ConnectNewEdge(Vector2 a, Vector2 b, ILinkedGraphEdgeFactory<EdgeType> edgeFactory, System.Object[] factoryParams, List<EdgeType> knownEdges)
     {
 
         LinkedGraphVertex aVert = HasVertex(knownEdges, a);
@@ -119,11 +172,11 @@ public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
             {
                 SubdivideEdge(seg, bVert, edgeFactory, knownEdges);
             }
-            else if (testingSegment.ContainsPoint(seg.a.pt))
+            else if (testingSegment.ContainsPoint(seg.a.pt, VERT_MERGE_DIST_SQR))
             {
                 intersectionVertices.Add(seg.a);
             }
-            else if (testingSegment.ContainsPoint(seg.b.pt))
+            else if (testingSegment.ContainsPoint(seg.b.pt, VERT_MERGE_DIST_SQR))
             {
                 intersectionVertices.Add(seg.b);
             }

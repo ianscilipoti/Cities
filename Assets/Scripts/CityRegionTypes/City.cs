@@ -10,12 +10,19 @@ public class City : CityRegion
     public Vector2 entrence;
     public TextureSampler terrainGenerator;
 
+    public static float MINSUBDIVAREA = 1000f;
+
     private List<CityEdge> foundEdgesCache;
 
-    public City (CityEdge[] boundaryLoop) : base(boundaryLoop, null, true) 
+    private const int MAXPASSES = 10;
+
+    public Transform cityParent;
+
+    public City (CityEdge[] boundaryLoop) : base(boundaryLoop, null, true, 1) 
     {
         entrence = Vector2.zero;
-        terrainGenerator = new TerrainGenerator(20f);
+        terrainGenerator = new TerrainGenerator(120f, 80f);
+        cityParent = new GameObject("CityParent", typeof(Transform)).transform;
     }
 
     public float SampleElevation (float x, float z)
@@ -29,15 +36,18 @@ public class City : CityRegion
     }
 
     //entry point of all generation. We excecute passes until all children are generated
-    public static City GenerateCity () 
+    public static City GenerateCity (float radius) 
     {
         CityEdgeFactory factory = new CityEdgeFactory();
-        CityEdge[] edges = GetPolygonEdges(8, 10f, 5f, factory, CityEdgeType.Wall);
+        CityEdge[] edges = GetPolygonEdges(20, radius, radius/2, 70f, factory, new System.Object[]{ CityEdgeType.Wall, 5.55f});
         City city = new City(edges);
 
         double startTime = Time.realtimeSinceStartup;
         int pass = 0;
         bool allGenerated = false;
+
+        //after pass1, generate clipping for roads
+
         while (!allGenerated)
         {
             allGenerated = city.TryGenerateRecursive(pass);
@@ -45,8 +55,36 @@ public class City : CityRegion
             {
                 pass++;
             }
+
+            switch (pass)
+            {
+                case (1):
+                    List<CityEdge> allEdges = city.GetAllEdges();
+                    foreach (CityEdge edge in allEdges)
+                    {
+                        //edge.width = Random.value + 1.5f;
+                        BoundaryBuilder builder = new BoundaryBuilder(edge, city, null);
+                        builder.PlaceBoundary();
+                    }
+                    break;
+
+                case (2):
+                    break;
+            }
+
+            if (pass > MAXPASSES)
+            {
+                Debug.LogError("Too many passes. Failing.");
+                return city;
+            }
         }
         Debug.Log("Finished generating in " + (Time.realtimeSinceStartup - startTime) + " seconds using " + (pass+1) + " passes.");
+
+        Debug.Log("City is verified (" + city.VerifyRecursive() + ")");
+
+
+
+
         return city;
     }
 
@@ -70,7 +108,8 @@ public class City : CityRegion
 
     public override SubdividableEdgeLoop<CityEdge> GetNextChild (CityEdge[] edges) 
     {
-        return new Block(edges, this);
+        //new Plot(edges, this, depth+1);//
+        return new Block(edges, this, depth+1);
     }
 
     public List<Plot> GetPlots () 
@@ -99,6 +138,8 @@ public class City : CityRegion
     //Cities always subdivide with citySkeleton
     //this function could randomize what subdivscheme is returned easily
     public override ISubDivScheme<SubdividableEdgeLoop<CityEdge>> GetDivScheme () {
-        return new CitySkeleton(new Vector2[]{entrence}, 1);
+        //return new Divide<CityEdge>(new CityEdgeFactory(), CityEdgeType.LandPath);
+        return new CitySkeleton(new Vector2[]{entrence}, Random.Range(20, 40), CityEdge.GetRoadFactoryParams(depth));
+        //return new GetBlocks(10, 10);
     } 
 }

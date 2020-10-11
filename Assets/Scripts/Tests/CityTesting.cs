@@ -7,12 +7,15 @@ public class CityTesting : MonoBehaviour
     public City city;
     private SegmentGraph<float> roadGraph;
     public bool showCity = true;
-    public bool showRoads;
+    public bool showRoads = false;
+    public int seed = 0;
+    public float radius = 300f;
     List<EdgeLoopEdge> test;
+    public bool refresh = false;
+    public bool changeSeed = false;
     // Start is called before the first frame update
     void Start()
     {
-        test = new List<EdgeLoopEdge>();
         //int numPoints = 15;
         //List<Vector2> bPoly = new List<Vector2>();
         //for (int i = 0; i < numPoints; i++)
@@ -23,8 +26,15 @@ public class CityTesting : MonoBehaviour
         //    float rnd = Random.Range(1f, 1.5f);
         //    bPoly.Add(new Vector2((int)(cos * 8f * rnd), (int)(sin * 8f * rnd)));
         //}
-        //Random.InitState(0);
-        city = City.GenerateCity();
+        Random.InitState(seed);
+        city = City.GenerateCity(radius);
+
+        List<CityEdge> testEdges = city.GetAllEdges();
+        test = new List<EdgeLoopEdge>();
+        foreach (CityEdge t in testEdges)
+        {
+            test.Add(t);
+        }
         //city.SubdivideRecursive();
         //roadGraph = city.GetBoundaryGraph();
 
@@ -35,13 +45,32 @@ public class CityTesting : MonoBehaviour
     {  
         if(showCity)
         {
-            city.DebugDrawRecursive(1f); 
+            city.DebugDrawRecursiveLayered(1f); 
         }
-        //if(showRoads)
-        //{
-        //    roadGraph.DebugGraph(0);
-        //}
 
-        //LinkedGraph<EdgeLoopEdge>.DebugDraw(test);
+        if (refresh)
+        {
+            if (changeSeed)
+            {
+                seed = Random.Range(0, 100000);
+            }
+
+            refresh = false;
+            Random.InitState(seed);
+            Destroy(city.cityParent.gameObject);
+            city = City.GenerateCity(radius);
+
+            List<CityEdge> testEdges = city.GetAllEdges();
+            test = new List<EdgeLoopEdge>();
+            foreach (CityEdge t in testEdges)
+            {
+                test.Add(t);
+            }
+
+        }
+        if (showRoads)
+        {
+            LinkedGraph<EdgeLoopEdge>.DebugDraw(test);
+        }
     }
 }

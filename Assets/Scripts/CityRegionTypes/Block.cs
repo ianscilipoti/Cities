@@ -8,7 +8,7 @@ using Polygon = EPPZ.Geometry.Model.Polygon;
 public class Block : CityRegion
 {
 
-    public Block (CityEdge[] boundaryLoop, City cityRoot) : base(boundaryLoop, cityRoot, true) {
+    public Block (CityEdge[] boundaryLoop, City cityRoot, int depth) : base(boundaryLoop, cityRoot, true, depth) {
     }
 
 	public override Color getDebugColor()
@@ -26,21 +26,21 @@ public class Block : CityRegion
         //return new Park(edges, rootCity);
         Polygon polygonTemplate = GetPolygon();
         float childArea = Mathf.Abs(polygonTemplate.area);
-        float parkChance = 0.07f;
-        //return new Plot(boundary, rootCity, false);
+        float parkChance = 0.025f;
         if (Random.value < parkChance)
         {
-            return new Park(edges, rootCity);
+            return new Plot(edges, rootCity, true, depth + 1);
         }
         else
         {
-            if (childArea > 3f)
+            if (childArea > City.MINSUBDIVAREA)
             {
-                return new Block(edges, rootCity);
+                return new Block(edges, rootCity, depth+1);
+                //return new Plot(edges, rootCity);
             }
             else
             {
-                return new Plot(edges, rootCity);
+                return new Plot(edges, rootCity, false, depth+1);
             } 
         }
     }
@@ -49,29 +49,15 @@ public class Block : CityRegion
     //this function could randomize what subdivscheme is returned easily
     public override ISubDivScheme<SubdividableEdgeLoop<CityEdge>> GetDivScheme () {
         CityEdgeFactory factory = new CityEdgeFactory();
-        //return new GetPieSections<CityEdge>(factory, CityEdgeType.LandPath);
-        if (IsConvex())
+        System.Object[] factoryParams = CityEdge.GetRoadFactoryParams(depth);
+
+        if (Random.value > 0.4 || GetPolygon().area < City.MINSUBDIVAREA * 2f)
         {
-            return new GetPieSections<CityEdge>(factory, CityEdgeType.LandPath);
+            return new GetBlocks(factoryParams);
         }
         else
         {
-            if (Random.value > 0.5f)
-            {
-                if (Random.value > 0.5f)
-                {
-                    return new GetBlocks(4, 3);
-                }
-                else
-                {
-                    return new GetBlocks(3, 4);
-                }
-
-            }
-            else
-            {
-                return new GetPieSections<CityEdge>(factory, CityEdgeType.LandPath);
-            } 
+            return new CircularCenter<CityEdge>(factory, factoryParams);
         }
     }
 }
