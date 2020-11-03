@@ -12,7 +12,8 @@ public abstract class EdgeLoopSubdivider <EdgeType>: ISubDivScheme<SubdividableE
 {
     public abstract List<SubdividableEdgeLoop<EdgeType>> GetChildren(SubdividableEdgeLoop<EdgeType> parent);
 
-    protected List<SubdividableEdgeLoop<EdgeType>> CollectChildren (SubdividableEdgeLoop<EdgeType> parent, List<DividingEdge> dividingEdges)
+
+    protected List<EdgeType[]> CollectChildLoops (SubdividableEdgeLoop<EdgeType> parent, List<DividingEdge> dividingEdges)
     {
         List<EdgeType> knownEdges = new List<EdgeType>(parent.GetEdgesEnumerable());
         Polygon parentPoly = parent.GetPolygon();
@@ -47,30 +48,12 @@ public abstract class EdgeLoopSubdivider <EdgeType>: ISubDivScheme<SubdividableE
             }
         }
 
-        float mergeDistanceSqr = 36f;
-        float mergeDistance = 6f;
+        DebugLines debug = GameObject.FindObjectOfType<DebugLines>();
 
-        List<Vector2> mergePoints = new List<Vector2>();
-        //find all the points that points should collapse to
+
+        int totalAddedEdges = 0;
+
         for (int j = 0; j < edgePaths.Count; j++)
-        {
-            Path edgePath = edgePaths[j];
-            //this is almost always just 2 elements in which case it runs once
-            for (int i = 0; i < edgePath.Count - 1; i++)
-            {
-                //convert path back into regular coordinates. Watch out that there is high enough resolution
-                //that when this conversion happens, the linkedGraph still thinks points/edges are adjacent and connects them
-                Vector2 p1 = HelperFunctions.GetPoint(edgePath[i]);
-                Vector2 p2 = HelperFunctions.GetPoint(edgePath[i + 1]);
-
-                if ((p1-p2).sqrMagnitude < mergeDistanceSqr)
-                {
-                    mergePoints.Add((p1 + p2) / 2f);
-                }
-            }
-        }
-
-        for (int j = 0; j < edgePaths.Count; j ++)
         {
             Path edgePath = edgePaths[j];
             ILinkedGraphEdgeFactory<EdgeType> edgeFactory = edgePathFactories[j];
@@ -83,78 +66,22 @@ public abstract class EdgeLoopSubdivider <EdgeType>: ISubDivScheme<SubdividableE
                 Vector2 p1 = HelperFunctions.GetPoint(edgePath[i]);
                 Vector2 p2 = HelperFunctions.GetPoint(edgePath[i + 1]);
 
-                //if a line is shorter than merge distance, there must be a merge point and these will become a singularity
-                if ((p1 - p2).sqrMagnitude < mergeDistanceSqr)
-                {
-                    continue;
-                }
-
-                bool doAdd = true;
-
-                foreach (Vector2 mergePt in mergePoints)
-                {
-                    bool m1 = (p1 - mergePt).sqrMagnitude <= mergeDistanceSqr/2;
-                    bool m2 = (p2 - mergePt).sqrMagnitude <= mergeDistanceSqr/2;
-
-                    if (m1 && m2)
-                    {
-                        doAdd = false;
-                        break;
-                    }
-                    else if (m1)
-                    {
-                        p1 = mergePt;
-                    }
-                    else if (m2)
-                    {
-                        p2 = mergePt;
-                    }
-                }
-
-                if (doAdd)//if everything else is fine on this edge, but one vert is closer to a parent vert, merge them
-                {
-                    bool m1 = false;
-                    if (parent.DistToPerimeter(p1) < 0.1f)
-                    {
-                        for (int k = 0; k < parentPoints.Length; k++)
-                        {
-                            if ((parentPoints[k] - p1).sqrMagnitude < mergeDistanceSqr)
-                            {
-                                p1 = parentPoints[k];
-                                m1 = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    bool m2 = false;
-                    if (parent.DistToPerimeter(p2) < 0.1f)
-                    {
-                        for (int k = 0; k < parentPoints.Length; k++)
-                        {
-                            if ((parentPoints[k] - p2).sqrMagnitude < mergeDistanceSqr)
-                            {
-                                p2 = parentPoints[k];
-                                m2 = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (m1 && m2)
-                    {
-                        doAdd = false;
-                    }
-                }
-
-
-                if (doAdd)
-                {
-                    LinkedGraph<EdgeType>.ConnectNewEdge(p1, p2, edgeFactory, edgeParams, knownEdges);
-                }
+                LinkedGraph<EdgeType>.ConnectNewEdge(p1, p2, edgeFactory, edgeParams, knownEdges);
+                totalAddedEdges++;
             }
         }
 
         List<EdgeType[]> formedChildLoops = parent.GetInteriorEdgeLoops();
+        if (formedChildLoops.Count == 0)
+        {
+            Debug.Log("No Children " + parent.GetHashCode());
+        }
+        return formedChildLoops;
+    }
+
+    protected List<SubdividableEdgeLoop<EdgeType>> CollectChildren (SubdividableEdgeLoop<EdgeType> parent, List<DividingEdge> dividingEdges)
+    {
+        List<EdgeType[]> formedChildLoops = CollectChildLoops(parent, dividingEdges);
         List<SubdividableEdgeLoop<EdgeType>> children = new List<SubdividableEdgeLoop<EdgeType>>();
         foreach (EdgeType[] childLoop in formedChildLoops)
         {

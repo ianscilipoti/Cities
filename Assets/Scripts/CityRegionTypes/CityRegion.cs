@@ -12,6 +12,8 @@ public abstract class CityRegion : SubdividableEdgeLoop<CityEdge>
     public City rootCity;
     public int depth { get; }
 
+    public bool meshGenerated { get; set; }
+
     public CityRegion(CityEdge[] edges, City rootCity, bool isSubdividable, int depth) : base(edges, isSubdividable)
     {
         this.rootCity = rootCity;
@@ -26,24 +28,44 @@ public abstract class CityRegion : SubdividableEdgeLoop<CityEdge>
         if (pass >= GetGenerationPass())
         {
             //subdivide protects against multiple subdivisions
-            Subdivide();
-            SubdividableEdgeLoop<CityEdge>[] children = GetChildren();
-            bool allChildrenGenerated = true;
-            //if there are no children, this returns true
-            foreach (SubdividableEdgeLoop<CityEdge> child in children)
+            if (!meshGenerated)
             {
-                if (child is CityRegion)
+                GenerateMeshes();
+            }
+            if (IsSubdividable())
+            {
+                if (!IsSubdivided())
                 {
-                    CityRegion cityChild = (CityRegion)child;
-                    bool childGenerated = cityChild.TryGenerateRecursive(pass);
-                    allChildrenGenerated = allChildrenGenerated & childGenerated;
+                    Subdivide();
                 }
+
+                //SubdividableEdgeLoop<CityEdge>[] children = GetChildren();
+                bool allChildrenGenerated = true;
+                //if there are no children, this returns true
+                foreach (SubdividableEdgeLoop<CityEdge> child in children)
+                {
+                    if (child is CityRegion)
+                    {
+                        CityRegion cityChild = (CityRegion)child;
+                        bool childGenerated = cityChild.TryGenerateRecursive(pass);
+                        allChildrenGenerated = allChildrenGenerated & childGenerated;
+                    }
+                }
+
+                return allChildrenGenerated;
+            }
+            else
+            {
+                return true;
             }
 
-            return allChildrenGenerated;
         }
-
         return false;
+    }
+
+    public virtual void GenerateMeshes()
+    {
+        meshGenerated = true;
     }
 
     public void DebugDrawRecursiveLayered(float strength)

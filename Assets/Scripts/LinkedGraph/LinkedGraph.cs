@@ -49,6 +49,10 @@ public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
                 verticalOffset = elevations[i];
             }
             Debug.DrawLine(HelperFunctions.projVec2(edge.a.pt) + Vector3.up * verticalOffset, HelperFunctions.projVec2(edge.b.pt) + Vector3.up * verticalOffset, col);
+            Random.InitState(edge.GetHashCode());
+            Vector3 center = HelperFunctions.projVec2(edge.a.pt) / 2 + HelperFunctions.projVec2(edge.b.pt) / 2;
+
+            Debug.DrawLine(center, center + new Vector3(Random.Range(-0.1f, 0.1f), -1f, 0), new Color(1f, 0.1f, 1f));
             DebugVert(edge.a);
             DebugVert(edge.b);
             //Debug.Log(edge.a.pt + ", " + edge.b.pt);
@@ -58,6 +62,7 @@ public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
 
     private static void DebugVert (LinkedGraphVertex vert)
     {
+        Random.InitState(vert.GetHashCode());
         Color vCol = Color.red;
         float len = 2f;
         if (vert.connections.Count == 1)
@@ -84,7 +89,7 @@ public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
         {
             vCol = Color.gray;
         }
-        Debug.DrawLine(HelperFunctions.projVec2(vert.pt), HelperFunctions.projVec2(vert.pt) + Vector3.up * len, vCol);
+        Debug.DrawLine(HelperFunctions.projVec2(vert.pt), HelperFunctions.projVec2(vert.pt) + (Vector3.up + new Vector3(Random.Range(-0.3f, 0.3f), 0, 0)) * len, vCol);
     }
 
     //disconnect this edge. Leaving it for the GC :(
@@ -124,6 +129,11 @@ public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
 
         LinkedGraphVertex aVert = HasVertex(knownEdges, a);
         LinkedGraphVertex bVert = HasVertex(knownEdges, b);
+
+        if (aVert != null && bVert != null && aVert == bVert || (a - b).sqrMagnitude < VERT_MERGE_DIST_SQR)
+        {
+            return;
+        }
 
         if (aVert == null)
         {

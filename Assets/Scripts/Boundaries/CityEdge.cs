@@ -29,6 +29,11 @@ public class CityEdge : EdgeLoopEdge
         return new System.Object[] { CityEdgeType.LandPath, 2f };
     }
 
+    public CityEdgeType GetRoadType ()
+    {
+        return type;
+    }
+
     public float GetWidth ()
     {
         return width;
@@ -39,6 +44,13 @@ public class CityEdge : EdgeLoopEdge
     {
         return "Edge" + a.pt.x + a.pt.y + b.pt.x + b.pt.y;
     }
+
+    //hacky way of getting unique IDs
+    public string GetID()
+    {
+        return id;
+    }
+
     //add functionality to ensure that children edges inheret our id and type
     public override void OnEdgeSplitCustom(LinkedGraphEdge edge1, LinkedGraphEdge edge2)
     {
@@ -74,6 +86,7 @@ public enum CityEdgeType
     LandPath = 1,
     WaterPath = 2,
     Wall = 3,
-    PlotBoundary = 4
+    PlotBoundary = 4,
+    EdgeCap = 5
 }
 

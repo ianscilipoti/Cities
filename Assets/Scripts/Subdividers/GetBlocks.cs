@@ -55,7 +55,6 @@ public class GetBlocks : EdgeLoopSubdivider<CityEdge>
 
         float rotation = relativeBoundAngle * Mathf.Rad2Deg;
 
-
         if (parentRotatedBounds.width > parentRotatedBounds.height * 0.7f)
         {
             //edgePaths.Add(new DividingEdge((centroid - Vector2.right * 1000f).RotatedAround(centroid, rotation), (centroid + Vector2.right * 1000f).RotatedAround(centroid, rotation), factory, factoryParams));

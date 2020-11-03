@@ -21,7 +21,7 @@ public class City : CityRegion
     public City (CityEdge[] boundaryLoop) : base(boundaryLoop, null, true, 1) 
     {
         entrence = Vector2.zero;
-        terrainGenerator = new TerrainGenerator(120f, 80f);
+        terrainGenerator = new TerrainGenerator(120f, 30f);
         cityParent = new GameObject("CityParent", typeof(Transform)).transform;
     }
 
@@ -56,21 +56,21 @@ public class City : CityRegion
                 pass++;
             }
 
-            switch (pass)
-            {
-                case (1):
-                    List<CityEdge> allEdges = city.GetAllEdges();
-                    foreach (CityEdge edge in allEdges)
-                    {
-                        //edge.width = Random.value + 1.5f;
-                        BoundaryBuilder builder = new BoundaryBuilder(edge, city, null);
-                        builder.PlaceBoundary();
-                    }
-                    break;
+            //switch (pass)
+            //{
+            //    case (1):
+            //        List<CityEdge> allEdges = city.GetAllEdges();
+            //        foreach (CityEdge edge in allEdges)
+            //        {
+            //            //edge.width = Random.value + 1.5f;
+            //            BoundaryBuilder builder = new BoundaryBuilder(edge, city, null);
+            //            builder.PlaceBoundary();
+            //        }
+            //        break;
 
-                case (2):
-                    break;
-            }
+            //    case (2):
+            //        break;
+            //}
 
             if (pass > MAXPASSES)
             {

@@ -59,7 +59,7 @@ public class DebugLines : MonoBehaviour
         {
             colors.Add(Color.white);
         }
-        elevations.Add(edges.Count);
+        elevations.Add(edges.Count/10f);
 
         //print(edge.a.pt + ", " + edge.b.pt);
     }
@@ -95,11 +95,12 @@ public class DebugLines : MonoBehaviour
                 Debug.DrawLine(HelperFunctions.projVec2(higlightedEdge.a.pt) + Vector3.up * 1.1f, HelperFunctions.projVec2(higlightedEdge.b.pt) + Vector3.up * 1.1f, Color.green);
             }
         }
+
         if (displaySimpleEdges)
         {
             foreach (Vector4 edge in simpleEdges)
             {
-                Debug.DrawLine(new Vector3(edge.x, -0.1f, edge.y), new Vector3(edge.z, -0.1f, edge.w), Color.yellow);
+                Debug.DrawLine(new Vector3(edge.x, -1f, edge.y), new Vector3(edge.z, -1f, edge.w), Color.yellow);
             }
         }
 	}

@@ -18,7 +18,7 @@ public class BuildablePlot : CityRegion
 
     public override SubdividableEdgeLoop<CityEdge> GetNextChild (CityEdge[] edges) 
     {
-        return null;//new Block(boundary, rootCity);
+        return null;
     }
 
     public override int GetGenerationPass()

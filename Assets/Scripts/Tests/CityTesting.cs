@@ -45,7 +45,8 @@ public class CityTesting : MonoBehaviour
     {  
         if(showCity)
         {
-            city.DebugDrawRecursiveLayered(1f); 
+            //city.DebugDrawRecursiveLayered(1f);
+            city.DebugDrawRecursive(1f);
         }
 
         if (refresh)

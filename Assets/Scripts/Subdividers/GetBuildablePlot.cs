@@ -11,7 +11,7 @@ using Paths = System.Collections.Generic.List<System.Collections.Generic.List<Cl
 
 //this subdiv behavior creates one child that exactly uses the space the roads leave behind
 
-public class GetBuildablePlot : ISubDivScheme<SubdividableEdgeLoop<CityEdge>>
+public class GetBuildablePlot : EdgeLoopSubdivider<CityEdge>
 {
     private City city;
     public GetBuildablePlot (City city)
@@ -19,14 +19,16 @@ public class GetBuildablePlot : ISubDivScheme<SubdividableEdgeLoop<CityEdge>>
         this.city = city;
     }
 
-    public List<SubdividableEdgeLoop<CityEdge>> GetChildren (SubdividableEdgeLoop<CityEdge> parent) 
+    public override List<SubdividableEdgeLoop<CityEdge>> GetChildren (SubdividableEdgeLoop<CityEdge> parent) 
     {
         Polygon parentPoly = parent.GetPolygon();
 
         Path polygonAsClip = parentPoly.ClipperPath(HelperFunctions.clipperScale);
 
+
         CityEdge[] edges = parent.GetEdges();
 
+        //------------------------------------------ OLD BAD STUFF
         //Paths edgePaths = new Paths();
 
         //Paths expandedLine = new Paths();
@@ -59,10 +61,32 @@ public class GetBuildablePlot : ISubDivScheme<SubdividableEdgeLoop<CityEdge>>
 
         //return new List<SubdividableEdgeLoop<CityEdge>>();
 
+
+        //--------------------------------------------------------------------------- OLD BAD STUFF END
+
+
         bool shapeRemains = true;
 
-        foreach (CityEdge edge in edges)
+        //int uniqueEdgeStartEdge = -1;
+        //for (int i = 0; i < edges.Length; i ++)
+        //{
+        //    if (!edges[(i+1)%edges.Length].GetID().Equals(edges[i].GetID()))
+        //    {
+        //        uniqueEdgeStartEdge = (i + 1) % edges.Length;
+        //        break;
+        //    }
+        //}
+
+        //LinkedGraphVertex anchorVert = edges[uniqueEdgeStartEdge].GetOppositeVertex(edges[uniqueEdgeStartEdge].GetSharedVertex(edges[(uniqueEdgeStartEdge+1)%edges.Length]));
+        //LinkedGraphVertex previusVert = null;
+
+        for (int j = 0; j < edges.Length; j ++)
         {
+            CityEdge edge = edges[j];
+
+            //int nextIndex = (j + uniqueEdgeStartEdge + 1) % edges.Length;
+            //LinkedGraphVertex thisVert = edge.GetOppositeVertex()
+
             Path edgeLine = new Path();
             edgeLine.Add(HelperFunctions.GetIntPoint(edge.a.pt));
             edgeLine.Add(HelperFunctions.GetIntPoint(edge.b.pt));
@@ -117,25 +141,88 @@ public class GetBuildablePlot : ISubDivScheme<SubdividableEdgeLoop<CityEdge>>
                 }
             }
         }
+        if (shapeRemains)
+        {
+            for (int i = polygonAsClip.Count - 1; i >= 0; i--)
+            {
+                for (int j = 0; j < i; j++)
+                {
+                    if (polygonAsClip[i].X == polygonAsClip[j].X && polygonAsClip[i].Y == polygonAsClip[j].Y)
+                    {
+                        polygonAsClip.RemoveAt(i);
+                        Debug.Log("removed dup of interior plot");
+                    }
+                }
+            }
+        }
+
+        Vector2[] parentPoints = parent.GetPoints();
+        ILinkedGraphEdgeFactory<CityEdge> factory = new CityEdgeFactory();
+        System.Object[] roadCapBoundarySettings = new System.Object[] { CityEdgeType.EdgeCap, 0f };
+        System.Object[] plotBoundarySettings = new System.Object[] { CityEdgeType.PlotBoundary, 0f };
 
         if (shapeRemains && polygonAsClip.Count > 0)
         {
-            LinkedGraphVertex[] subPlotVerts = new LinkedGraphVertex[polygonAsClip.Count];
+            List<DividingEdge> dividingEdges = new List<DividingEdge>();
+            Vector2[] subPlotVerts = new Vector2[polygonAsClip.Count];
             for (int i = 0; i < polygonAsClip.Count; i++)
             {
-                subPlotVerts[i] = new LinkedGraphVertex(HelperFunctions.GetPoint(polygonAsClip[i]));
+                subPlotVerts[i] = HelperFunctions.GetPoint(polygonAsClip[i]);
             }
-            CityEdge[] subPlotEdges = new CityEdge[polygonAsClip.Count];
-            for (int i = 0; i < polygonAsClip.Count; i++)
+
+            List<CityEdge> knownEdges = new List<CityEdge>(parent.GetEdgesEnumerable());
+
+
+            for (int i = 0; i < parentPoints.Length; i++)
             {
-                subPlotEdges[i] = new CityEdge(subPlotVerts[i], subPlotVerts[(i + 1) % polygonAsClip.Count], CityEdgeType.PlotBoundary, 0f);
+                float closestVertDistance = float.MaxValue;
+                int closestVertIndex = -1;
+                for (int j = 0; j < subPlotVerts.Length; j++)
+                {
+                    float thisDist = (parentPoints[i] - subPlotVerts[j]).sqrMagnitude;
+                    if (thisDist < closestVertDistance)
+                    {
+                        closestVertDistance = thisDist;
+                        closestVertIndex = j;
+                    }
+                }
+                dividingEdges.Add(new DividingEdge(parentPoints[i], subPlotVerts[closestVertIndex], factory, roadCapBoundarySettings));
             }
-            SubdividableEdgeLoop<CityEdge> plot = parent.GetNextChild(subPlotEdges);
-            Polygon plotPoly = parent.GetPolygon();
 
+            for (int i = 0; i < subPlotVerts.Length; i++)
+            {
+                dividingEdges.Add(new DividingEdge(subPlotVerts[i], subPlotVerts[(i + 1) % subPlotVerts.Length], factory, plotBoundarySettings));
+            }
 
-            return new List<SubdividableEdgeLoop<CityEdge>> { plot };
+            List<CityEdge[]> formedChildRegions = CollectChildLoops(parent, dividingEdges);
+
+            List<SubdividableEdgeLoop<CityEdge>> children = new List<SubdividableEdgeLoop<CityEdge>>();
+
+            for (int i = 0; i < formedChildRegions.Count; i ++)
+            {
+                CityEdge[] loop = formedChildRegions[i];
+                bool allPlotBoundaries = true;
+                for (int j = 0; j < loop.Length; j ++)
+                {
+                    if (loop[j].GetRoadType() != CityEdgeType.PlotBoundary)
+                    {
+                        allPlotBoundaries = false;
+                    }
+                }
+                if (allPlotBoundaries)
+                {
+                    children.Add(parent.GetNextChild(loop));
+                }
+                else
+                {
+                    children.Add(new Road(loop, city));
+                }
+            }
+
+            return children;
+            //return new List<SubdividableEdgeLoop<CityEdge>>();
         }
+
 
         return new List<SubdividableEdgeLoop<CityEdge>>();
     }

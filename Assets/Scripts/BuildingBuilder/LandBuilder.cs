@@ -9,12 +9,14 @@ public class LandBuilder
     private EdgeLoop<CityEdge> footprint;
     private City city;
     private float pointsPerUnit;
+    GameObject[] treeModels;
 
     public LandBuilder (EdgeLoop<CityEdge> footprint, City city)
     {
         this.footprint = footprint;
         this.city = city;
         pointsPerUnit = 0.3f;
+        treeModels = new GameObject[] {Resources.Load<GameObject>("Trees/Pine1"), Resources.Load<GameObject>("Trees/Pine2") };
     }
 
     public void PlaceLand()
@@ -24,6 +26,23 @@ public class LandBuilder
         buildingObject.GetComponent<MeshFilter>().mesh = mesh;
         buildingObject.GetComponent<MeshRenderer>().sharedMaterial = Resources.Load<Material>("Materials/Grass");
         buildingObject.transform.parent = city.cityParent;
+
+        float treeDensity = 0.015f;
+        Polygon footPrintPoly = footprint.GetPolygon();
+        int numTrees = Mathf.RoundToInt(treeDensity * footPrintPoly.area);
+        int numPlaced = 0;
+        while(numPlaced < numTrees)
+        {
+            Rect bounds = footprint.GetBounds();
+            Vector2 position2D = new Vector2(Random.Range(bounds.xMin, bounds.xMax), Random.Range(bounds.yMin, bounds.yMax));
+            if (footPrintPoly.ContainsPoint(position2D))
+            {
+                numPlaced++;
+                Vector3 position3D = new Vector3(position2D.x, city.SampleElevation(position2D.x, position2D.y) - 0.2f, position2D.y);
+                GameObject newTree = Object.Instantiate(treeModels[(int)(treeModels.Length * Random.value)], position3D, Quaternion.Euler(0, Random.value * 360f, 0), city.cityParent);
+                newTree.transform.localScale = Vector3.one * Random.Range(0.6f, 1.3f);
+            }
+        }
     }
 
     public Mesh GetMesh ()

@@ -166,8 +166,6 @@ public class SubdividableEdgeLoop<EdgeType> : EdgeLoop<EdgeType>, Subdividable w
             return true;
         }
 
-        GenerateMeshes();
-
         ISubDivScheme<SubdividableEdgeLoop<EdgeType>> subdivScheme = GetDivScheme();
         if (subdivScheme != null)
         {
@@ -180,11 +178,6 @@ public class SubdividableEdgeLoop<EdgeType> : EdgeLoop<EdgeType>, Subdividable w
             return false;
         }
 	}
-
-    public virtual void GenerateMeshes ()
-    {
-        
-    }
 
     //public void SubdivideRecursive ()
     //{
