@@ -20,6 +20,11 @@ public class Plot : CityRegion
         return new BuildablePlot(edges, rootCity, park, depth+1);
     }
 
+    protected override List<SubdividableEdgeLoop<CityEdge>> Subdivide()
+    {
+        return new GetBuildablePlot(city).GetChildren(this);
+    }
+
     public override int GetGenerationPass()
     {
         return 1;
@@ -32,7 +37,7 @@ public class Plot : CityRegion
 
 	//Cities always subdivide with citySkeleton
 	//this function could randomize what subdivscheme is returned easily
-	public override ISubDivScheme<SubdividableEdgeLoop<CityEdge>> GetDivScheme () {
-        return new GetBuildablePlot(city);
-    }
+	//public override ISubDivScheme<SubdividableEdgeLoop<CityEdge>> GetDivScheme () {
+ //       return new GetBuildablePlot(city);
+ //   }
 }

@@ -21,7 +21,26 @@ public class Block : CityRegion
         return 0;
     }
 
-	public override SubdividableEdgeLoop<CityEdge> GetNextChild (CityEdge[] edges) 
+    protected override List<SubdividableEdgeLoop<CityEdge>> Subdivide()
+    {
+        CityEdgeFactory factory = new CityEdgeFactory();
+        System.Object[] factoryParams = CityEdge.GetRoadFactoryParams(depth);
+
+        EdgeLoopSubdivider<CityEdge> subDivScheme;
+
+        if (Random.value > 0.4 || GetPolygon().area < City.MINSUBDIVAREA * 2f)
+        {
+            subDivScheme = new GetBlocks(factoryParams);
+        }
+        else
+        {
+            subDivScheme = new CircularCenter<CityEdge>(factory, factoryParams);
+        }
+
+        return subDivScheme.GetChildren(this);
+    }
+
+    public override SubdividableEdgeLoop<CityEdge> GetNextChild (CityEdge[] edges) 
     {
         //return new Park(edges, rootCity);
         Polygon polygonTemplate = GetPolygon();
@@ -46,17 +65,17 @@ public class Block : CityRegion
 
     //Cities always subdivide with citySkeleton
     //this function could randomize what subdivscheme is returned easily
-    public override ISubDivScheme<SubdividableEdgeLoop<CityEdge>> GetDivScheme () {
-        CityEdgeFactory factory = new CityEdgeFactory();
-        System.Object[] factoryParams = CityEdge.GetRoadFactoryParams(depth);
+    //public override ISubDivScheme<SubdividableEdgeLoop<CityEdge>> GetDivScheme () {
+    //    CityEdgeFactory factory = new CityEdgeFactory();
+    //    System.Object[] factoryParams = CityEdge.GetRoadFactoryParams(depth);
 
-        if (Random.value > 0.4 || GetPolygon().area < City.MINSUBDIVAREA * 2f)
-        {
-            return new GetBlocks(factoryParams);
-        }
-        else
-        {
-            return new CircularCenter<CityEdge>(factory, factoryParams);
-        }
-    }
+    //    if (Random.value > 0.4 || GetPolygon().area < City.MINSUBDIVAREA * 2f)
+    //    {
+    //        return new GetBlocks(factoryParams);
+    //    }
+    //    else
+    //    {
+    //        return new CircularCenter<CityEdge>(factory, factoryParams);
+    //    }
+    //}
 }

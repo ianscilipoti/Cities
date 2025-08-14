@@ -60,7 +60,7 @@ public class BuildablePlot : CityRegion
 
 	//Cities always subdivide with citySkeleton
 	//this function could randomize what subdivscheme is returned easily
-	public override ISubDivScheme<SubdividableEdgeLoop<CityEdge>> GetDivScheme () {
-        return null;
-    }
+	//public override ISubDivScheme<SubdividableEdgeLoop<CityEdge>> GetDivScheme () {
+ //       return null;
+ //   }
 }

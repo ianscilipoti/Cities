@@ -89,9 +89,17 @@ public class City : CityRegion
     }
 
     //Cities always subdivide into Block instances. Blocks are the generic term for a section of the city
-    public override SubdividableEdgeLoop<CityEdge> GetNextChild (CityEdge[] edges) 
+    public override SubdividableEdgeLoop<CityEdge> GetNextChild(CityEdge[] edges)
     {
-        return new Block(edges, this, depth+1);
+        return new Block(edges, this, depth + 1);
+    }
+
+    protected override List<SubdividableEdgeLoop<CityEdge>> Subdivide()
+    {
+        // Direct subdivision logic - no scheme needed
+        CitySkeleton citySkeleton = new CitySkeleton(new Vector2[] { entrence }, Random.Range(20, 40), CityEdge.GetRoadFactoryParams(depth));
+
+        return citySkeleton.GetChildren(this);
     }
 
     public List<Plot> GetPlots () 
@@ -119,9 +127,8 @@ public class City : CityRegion
 
     //Cities always subdivide with citySkeleton
     //this function could randomize what subdivscheme is returned easily
-    public override ISubDivScheme<SubdividableEdgeLoop<CityEdge>> GetDivScheme () {
-        //return new Divide<CityEdge>(new CityEdgeFactory(), CityEdgeType.LandPath);
-        return new CitySkeleton(new Vector2[]{entrence}, Random.Range(20, 40), CityEdge.GetRoadFactoryParams(depth));
-        //return new GetBlocks(10, 10);
-    } 
+    //public override ISubDivScheme<SubdividableEdgeLoop<CityEdge>> GetDivScheme()
+    //{
+    //    return new CitySkeleton(new Vector2[] { entrence }, Random.Range(20, 40), CityEdge.GetRoadFactoryParams(depth));
+    //}
 }

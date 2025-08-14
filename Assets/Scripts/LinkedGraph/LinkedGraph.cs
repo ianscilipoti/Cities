@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using EPPZ.Geometry.Model;
 
+/*
+ * LinkedGraph is a template 
+ *
+ */
+
 public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
 {
 
@@ -55,9 +60,7 @@ public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
             Debug.DrawLine(center, center + new Vector3(Random.Range(-0.1f, 0.1f), -1f, 0), new Color(1f, 0.1f, 1f));
             DebugVert(edge.a);
             DebugVert(edge.b);
-            //Debug.Log(edge.a.pt + ", " + edge.b.pt);
         }
-        //Debug.Log("-----------");
     }
 
     private static void DebugVert (LinkedGraphVertex vert)

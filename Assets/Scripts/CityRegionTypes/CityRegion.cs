@@ -36,7 +36,7 @@ public abstract class CityRegion : SubdividableEdgeLoop<CityEdge>
             {
                 if (!IsSubdivided())
                 {
-                    Subdivide();
+                    TrySubdivide();
                 }
 
                 //SubdividableEdgeLoop<CityEdge>[] children = GetChildren();

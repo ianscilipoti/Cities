@@ -8,10 +8,9 @@ using ClipperLib;
 using Path = System.Collections.Generic.List<ClipperLib.IntPoint>;
 using Paths = System.Collections.Generic.List<System.Collections.Generic.List<ClipperLib.IntPoint>>;
 
-public abstract class EdgeLoopSubdivider <EdgeType>: ISubDivScheme<SubdividableEdgeLoop<EdgeType>> where EdgeType : EdgeLoopEdge
+public abstract class EdgeLoopSubdivider <EdgeType> where EdgeType : EdgeLoopEdge
 {
     public abstract List<SubdividableEdgeLoop<EdgeType>> GetChildren(SubdividableEdgeLoop<EdgeType> parent);
-
 
     protected List<EdgeType[]> CollectChildLoops (SubdividableEdgeLoop<EdgeType> parent, List<DividingEdge> dividingEdges)
     {

@@ -6,10 +6,9 @@ using System.Linq;
 
 //provides functionality to recursively subdivide a region defined by an edge loop
 //requires a subdivision scheme to format the subdivision pattern
-//and a getNextChild to randomly choose the types of objects representing the children
-public class SubdividableEdgeLoop<EdgeType> : EdgeLoop<EdgeType>, Subdividable where EdgeType : EdgeLoopEdge
+//and a getNextChild to randomly choose the types of objects representing the childrendd
+public class SubdividableEdgeLoop<EdgeType> : EdgeLoop<EdgeType> where EdgeType : EdgeLoopEdge
 {
-    private Rect bounds;
     protected List<SubdividableEdgeLoop<EdgeType>> children;
     private bool isSubdividable;
     private bool isSubdivided;
@@ -26,10 +25,10 @@ public class SubdividableEdgeLoop<EdgeType> : EdgeLoop<EdgeType>, Subdividable w
     }
 
     //all SubdividableEdgeLoops must have a SubDivScheme. There are many ways to subdivide a shape. We cannot subdivide without knowing what subidivion to use. 
-    public virtual ISubDivScheme<SubdividableEdgeLoop<EdgeType>> GetDivScheme()
-    {
-        return null;
-    }
+    //public virtual ISubDivScheme<SubdividableEdgeLoop<EdgeType>> GetDivScheme()
+    //{
+    //    return null;
+    //}
 
     public virtual SubdividableEdgeLoop<EdgeType> GetNextChild(EdgeType[] edges)
     {
@@ -163,25 +162,54 @@ public class SubdividableEdgeLoop<EdgeType> : EdgeLoop<EdgeType>, Subdividable w
         return foundLoops;
     }
 
-	public bool Subdivide ()
-	{
-        if (IsSubdivided())
+    //public bool Subdivide ()
+    //{
+    //       if (IsSubdivided())
+    //       {
+    //           return true;
+    //       }
+
+    //       ISubDivScheme<SubdividableEdgeLoop<EdgeType>> subdivScheme = GetDivScheme();
+    //       if (subdivScheme != null)
+    //       {
+    //           children = subdivScheme.GetChildren(this);
+    //           isSubdivided = true;
+    //           return true;
+    //       }
+    //       else
+    //       {
+    //           return false;
+    //       }
+    //}
+
+    public bool TrySubdivide()
+    {
+        if (isSubdivided)
         {
-            return true;
+            return true; // Already subdivided
         }
 
-        ISubDivScheme<SubdividableEdgeLoop<EdgeType>> subdivScheme = GetDivScheme();
-        if (subdivScheme != null)
+        if (!IsSubdividable())
         {
-            children = subdivScheme.GetChildren(this);
+            return false; // Can't subdivide
+        }
+
+        var newChildren = Subdivide();
+
+        if (newChildren != null && newChildren.Count > 0)
+        {
+            children.AddRange(newChildren);
             isSubdivided = true;
             return true;
         }
-        else
-        {
-            return false;
-        }
-	}
+
+        return false;
+    }
+
+    protected virtual List<SubdividableEdgeLoop<EdgeType>> Subdivide()
+    {
+        return new List<SubdividableEdgeLoop<EdgeType>>();
+    }
 
     public void DebugDrawRecursive (float strength, int depth)
     {
