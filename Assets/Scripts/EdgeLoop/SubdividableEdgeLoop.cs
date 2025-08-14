@@ -24,12 +24,6 @@ public class SubdividableEdgeLoop<EdgeType> : EdgeLoop<EdgeType> where EdgeType 
         return children.ToArray();
     }
 
-    //all SubdividableEdgeLoops must have a SubDivScheme. There are many ways to subdivide a shape. We cannot subdivide without knowing what subidivion to use. 
-    //public virtual ISubDivScheme<SubdividableEdgeLoop<EdgeType>> GetDivScheme()
-    //{
-    //    return null;
-    //}
-
     public virtual SubdividableEdgeLoop<EdgeType> GetNextChild(EdgeType[] edges)
     {
         return new SubdividableEdgeLoop<EdgeType>(edges, true);
@@ -161,26 +155,6 @@ public class SubdividableEdgeLoop<EdgeType> : EdgeLoop<EdgeType> where EdgeType 
 
         return foundLoops;
     }
-
-    //public bool Subdivide ()
-    //{
-    //       if (IsSubdivided())
-    //       {
-    //           return true;
-    //       }
-
-    //       ISubDivScheme<SubdividableEdgeLoop<EdgeType>> subdivScheme = GetDivScheme();
-    //       if (subdivScheme != null)
-    //       {
-    //           children = subdivScheme.GetChildren(this);
-    //           isSubdivided = true;
-    //           return true;
-    //       }
-    //       else
-    //       {
-    //           return false;
-    //       }
-    //}
 
     public bool TrySubdivide()
     {

@@ -62,20 +62,4 @@ public class Block : CityRegion
             } 
         }
     }
-
-    //Cities always subdivide with citySkeleton
-    //this function could randomize what subdivscheme is returned easily
-    //public override ISubDivScheme<SubdividableEdgeLoop<CityEdge>> GetDivScheme () {
-    //    CityEdgeFactory factory = new CityEdgeFactory();
-    //    System.Object[] factoryParams = CityEdge.GetRoadFactoryParams(depth);
-
-    //    if (Random.value > 0.4 || GetPolygon().area < City.MINSUBDIVAREA * 2f)
-    //    {
-    //        return new GetBlocks(factoryParams);
-    //    }
-    //    else
-    //    {
-    //        return new CircularCenter<CityEdge>(factory, factoryParams);
-    //    }
-    //}
 }

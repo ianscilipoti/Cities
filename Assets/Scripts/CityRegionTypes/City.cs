@@ -124,11 +124,4 @@ public class City : CityRegion
             }
         }
     }
-
-    //Cities always subdivide with citySkeleton
-    //this function could randomize what subdivscheme is returned easily
-    //public override ISubDivScheme<SubdividableEdgeLoop<CityEdge>> GetDivScheme()
-    //{
-    //    return new CitySkeleton(new Vector2[] { entrence }, Random.Range(20, 40), CityEdge.GetRoadFactoryParams(depth));
-    //}
 }
