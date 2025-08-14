@@ -35,10 +35,4 @@ public class Road : CityRegion
 	{
         return new Color(0.5f, 0.5f, 0, 0.8f);
 	}
-
-	//Cities always subdivide with citySkeleton
-	//this function could randomize what subdivscheme is returned easily
-	//public override ISubDivScheme<SubdividableEdgeLoop<CityEdge>> GetDivScheme () {
- //       return null;
- //   }
 }

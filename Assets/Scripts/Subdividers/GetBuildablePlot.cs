@@ -28,64 +28,12 @@ public class GetBuildablePlot : EdgeLoopSubdivider<CityEdge>
 
         CityEdge[] edges = parent.GetEdges();
 
-        //------------------------------------------ OLD BAD STUFF
-        //Paths edgePaths = new Paths();
-
-        //Paths expandedLine = new Paths();
-
-        //float width = 2f;
-        //ClipperOffset clipperOffset = new ClipperOffset();
-        //clipperOffset.AddPath(polygonAsClip, JoinType.jtSquare, EndType.etClosedPolygon);
-        //clipperOffset.Execute(ref expandedLine, HelperFunctions.clipperScale * (-width / 2));
-
-        //if (expandedLine.Count > 0)
-        //{
-        //    Path shrunkPoly = expandedLine[0];
-        //    LinkedGraphVertex[] subPlotVerts = new LinkedGraphVertex[shrunkPoly.Count];
-        //    for (int i = 0; i < shrunkPoly.Count; i++)
-        //    {
-        //        subPlotVerts[i] = new LinkedGraphVertex(HelperFunctions.GetPoint(shrunkPoly[i]));
-        //    }
-        //    CityEdge[] subPlotEdges = new CityEdge[shrunkPoly.Count];
-        //    for (int i = 0; i < shrunkPoly.Count; i++)
-        //    {
-        //        subPlotEdges[i] = new CityEdge(subPlotVerts[i], subPlotVerts[(i + 1) % shrunkPoly.Count], CityEdgeType.PlotBoundary, 0f);
-        //    }
-
-        //    SubdividableEdgeLoop<CityEdge> plot = parent.GetNextChild(subPlotEdges);
-        //    Polygon plotPoly = parent.GetPolygon();
-
-
-        //    return new List<SubdividableEdgeLoop<CityEdge>> { plot };
-        //}
-
-        //return new List<SubdividableEdgeLoop<CityEdge>>();
-
-
-        //--------------------------------------------------------------------------- OLD BAD STUFF END
-
 
         bool shapeRemains = true;
-
-        //int uniqueEdgeStartEdge = -1;
-        //for (int i = 0; i < edges.Length; i ++)
-        //{
-        //    if (!edges[(i+1)%edges.Length].GetID().Equals(edges[i].GetID()))
-        //    {
-        //        uniqueEdgeStartEdge = (i + 1) % edges.Length;
-        //        break;
-        //    }
-        //}
-
-        //LinkedGraphVertex anchorVert = edges[uniqueEdgeStartEdge].GetOppositeVertex(edges[uniqueEdgeStartEdge].GetSharedVertex(edges[(uniqueEdgeStartEdge+1)%edges.Length]));
-        //LinkedGraphVertex previusVert = null;
 
         for (int j = 0; j < edges.Length; j ++)
         {
             CityEdge edge = edges[j];
-
-            //int nextIndex = (j + uniqueEdgeStartEdge + 1) % edges.Length;
-            //LinkedGraphVertex thisVert = edge.GetOppositeVertex()
 
             Path edgeLine = new Path();
             edgeLine.Add(HelperFunctions.GetIntPoint(edge.a.pt));
@@ -220,7 +168,6 @@ public class GetBuildablePlot : EdgeLoopSubdivider<CityEdge>
             }
 
             return children;
-            //return new List<SubdividableEdgeLoop<CityEdge>>();
         }
 
 

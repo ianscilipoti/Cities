@@ -134,40 +134,8 @@ public class LinkedGraphEdge
             }
         }
 
-        //CollectEdgesR(collectedEdges, seenEdges, allConsecutive, filter, mask);
-
         return collectedEdges;
     }
-
-    //private void CollectEdgesR <EdgeType> (List<EdgeType> collectedEdges, List<LinkedGraphEdge> seenEdges, bool allConsecutive, SearchFilter filter, HashSet<EdgeType> mask) where EdgeType : LinkedGraphEdge
-    //{
-    //    EdgeType thisInstance = null;
-    //    if (this is EdgeType)
-    //    {
-    //        thisInstance = (EdgeType)this;
-    //    }
-
-    //    if ((thisInstance == null && allConsecutive) || collectedEdges.Contains(thisInstance) || seenEdges.Contains(this))
-    //    {
-    //        return;
-    //    }
-    //    else if ((filter == null || filter(this)) && (mask == null || mask.Contains(thisInstance)))
-    //    {
-    //        collectedEdges.Add(thisInstance);
-    //    }
-    //    else if (allConsecutive)//if all the passing edge should be attached, or consecutive, then if this fails, return.
-    //    {
-    //        return;
-    //    }
-
-    //    EnumerateNeighborEdges((LinkedGraphEdge edge) =>
-    //    {
-    //        if (!seenEdges.Contains(edge))
-    //        {
-    //            edge.CollectEdgesR(collectedEdges, seenEdges, allConsecutive, filter, mask); 
-    //        }
-    //    }); 
-    //}
 
     public void EnumerateNeighborEdges(System.Action<LinkedGraphEdge> action)
     {

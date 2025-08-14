@@ -27,10 +27,7 @@ public class CitySkeleton : EdgeLoopSubdivider<CityEdge>//ISubDivScheme <Subdivi
         //generate points of interest
         List<RoadDestination> pointsOfInterest = new List<RoadDestination>();
         Vector2 centroid = parent.GetCenter();
-        //parent.EnumerateEdges((EdgeLoopEdge edge) =>
-        //{
-        //    pointsOfInterest.Add(new RoadDestination(Vector2.Lerp(edge.a.pt, edge.b.pt, Random.Range(0.2f, 0.8f)), 1, false, true));
-        //});
+
         Rect bounds = parent.GetBounds();
         bounds.width = bounds.width * 2;
         bounds.height = bounds.height * 2;
