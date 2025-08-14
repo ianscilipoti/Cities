@@ -10,7 +10,7 @@ public class City : CityRegion
     public Vector2 entrence;
     public TextureSampler terrainGenerator;
 
-    public static float MINSUBDIVAREA = 2500f;
+    public static float MINSUBDIVAREA = 3500f;
 
     private List<CityEdge> foundEdgesCache;
 
@@ -21,7 +21,7 @@ public class City : CityRegion
     public City (CityEdge[] boundaryLoop) : base(boundaryLoop, null, true, 1) 
     {
         entrence = Vector2.zero;
-        terrainGenerator = new TerrainGenerator(120f, 60f);
+        terrainGenerator = new TerrainGenerator(120f, 30f);
         cityParent = new GameObject("CityParent", typeof(Transform)).transform;
     }
     
@@ -55,6 +55,13 @@ public class City : CityRegion
             if (!allGenerated)
             {
                 pass++;
+            }
+
+            //calculate neighbors
+            if (pass == 1)
+            {
+                var neighborMap = city.BuildNeighborMap();
+                Debug.Log($"Computed neighbor map for {neighborMap.Count} non-park plots");
             }
 
             if (pass > MAXPASSES)
@@ -97,7 +104,7 @@ public class City : CityRegion
     protected override List<SubdividableEdgeLoop<CityEdge>> Subdivide()
     {
         // Direct subdivision logic - no scheme needed
-        CitySkeleton citySkeleton = new CitySkeleton(new Vector2[] { entrence }, Random.Range(20, 40), CityEdge.GetRoadFactoryParams(depth));
+        CitySkeleton citySkeleton = new CitySkeleton(new Vector2[] { entrence }, Random.Range(10, 20), CityEdge.GetRoadFactoryParams(depth));
 
         return citySkeleton.GetChildren(this);
     }
@@ -124,4 +131,64 @@ public class City : CityRegion
             }
         }
     }
+
+	// Build neighbor dictionary mapping non-park BuildablePlot to list of adjacent non-park BuildablePlots
+	public Dictionary<BuildablePlot, List<BuildablePlot>> BuildNeighborMap()
+	{
+		var allBuildable = new List<BuildablePlot>();
+		CollectBuildablePlotsRecursive(this, allBuildable);
+
+		// Build edge -> plots map to find adjacency via shared CityEdge references
+		var edgeToPlots = new Dictionary<CityEdge, List<BuildablePlot>>();
+		foreach (var plot in allBuildable)
+		{
+			foreach (var edge in plot.GetEdges())
+			{
+				var cityEdge = edge as CityEdge;
+				if (cityEdge == null) continue;
+				if (!edgeToPlots.TryGetValue(cityEdge, out var list))
+				{
+					list = new List<BuildablePlot>(2);
+					edgeToPlots[cityEdge] = list;
+				}
+				if (!list.Contains(plot)) list.Add(plot);
+			}
+		}
+
+		var neighbors = new Dictionary<BuildablePlot, List<BuildablePlot>>();
+		foreach (var plot in allBuildable)
+		{
+			if (plot.IsPark) continue; // skip parks as keys
+			var set = new HashSet<BuildablePlot>();
+			foreach (var edge in plot.GetEdges())
+			{
+				var cityEdge = edge as CityEdge;
+				if (cityEdge == null) continue;
+				if (edgeToPlots.TryGetValue(cityEdge, out var list))
+				{
+					foreach (var other in list)
+					{
+						if (other != plot && !other.IsPark) set.Add(other);
+					}
+				}
+			}
+			neighbors[plot] = new List<BuildablePlot>(set);
+		}
+
+		return neighbors;
+	}
+
+	private void CollectBuildablePlotsRecursive(SubdividableEdgeLoop<CityEdge> node, List<BuildablePlot> storage)
+	{
+		if (node is BuildablePlot)
+		{
+			storage.Add((BuildablePlot)node);
+			return;
+		}
+		var children = node.GetChildren();
+		for (int i = 0; i < children.Length; i++)
+		{
+			CollectBuildablePlotsRecursive(children[i], storage);
+		}
+	}
 }

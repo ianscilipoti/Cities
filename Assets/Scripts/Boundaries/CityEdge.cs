@@ -20,7 +20,7 @@ public class CityEdge : EdgeLoopEdge
     {
         if (depth == 1)
         {
-            return new System.Object[] { CityEdgeType.LandPath, 8f };
+            return new System.Object[] { CityEdgeType.LandPath, 12f };
         }
         if (depth == 2)
         {
