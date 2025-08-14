@@ -45,11 +45,8 @@ public class CircularCenter <EdgeType> : EdgeLoopSubdivider<EdgeType> where Edge
         {
             dividingEdges.Add(new DividingEdge(circlePoints[i], circlePoints[(i+1)%circleResolution], factory, factoryParams));
 
-            //if (i % numRays == 0)
-            //{
-                Vector2 extended = (circlePoints[i] - centroid) * 100f + centroid;
-                dividingEdges.Add(new DividingEdge(circlePoints[i], extended, factory, factoryParams));
-            //}
+            Vector2 extended = (circlePoints[i] - centroid) * 100f + centroid;
+            dividingEdges.Add(new DividingEdge(circlePoints[i], extended, factory, factoryParams));
         }
 
         return CollectChildren(parent, dividingEdges);

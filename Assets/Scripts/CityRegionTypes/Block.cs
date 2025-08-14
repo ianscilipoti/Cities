@@ -36,7 +36,6 @@ public class Block : CityRegion
             if (childArea > City.MINSUBDIVAREA)
             {
                 return new Block(edges, rootCity, depth+1);
-                //return new Plot(edges, rootCity);
             }
             else
             {

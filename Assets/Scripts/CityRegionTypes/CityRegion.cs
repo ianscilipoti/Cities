@@ -76,12 +76,6 @@ public abstract class CityRegion : SubdividableEdgeLoop<CityEdge>
         {
             UnityEngine.Debug.DrawLine(HelperFunctions.projVec2(eachEdge_.a.pt) + Vector3.up * depth * 40, HelperFunctions.projVec2(eachEdge_.b.pt) + Vector3.up * depth * 40, drawCol);
         });
-        //drawCol = Color.white;
-        //if (!IsConvex())
-        //{
-        //    drawCol = Color.red;
-        //}
-        //Debug.DrawLine(HelperFunctions.projVec2(GetPolygon().centroid), HelperFunctions.projVec2(GetPolygon().centroid) + Vector3.up * 0.1f, drawCol);
 
         foreach (var child in children)
         {
@@ -91,7 +85,7 @@ public abstract class CityRegion : SubdividableEdgeLoop<CityEdge>
             }
             else
             {
-                child.DebugDrawRecursive(strength);
+                child.DebugDrawRecursive(strength, 100);
             }
 
         }

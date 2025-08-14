@@ -36,6 +36,7 @@ public class BoundaryBuilder
     {
         Vector2[] regionPoints = region.GetPoints();
         Vector3[] verts = new Vector3[regionPoints.Length + 1];
+        Vector2[] UVs = new Vector2[regionPoints.Length + 1];
         int[] tris = new int[regionPoints.Length*3];
 
         Vector3 avg = Vector3.zero;
@@ -45,10 +46,12 @@ public class BoundaryBuilder
             float z = regionPoints[i].y;
             float heightSample = city.SampleElevation(x, z);
             verts[i] = new Vector3(x, heightSample, z);
+            UVs[i] = new Vector2(x, z);
             avg += verts[i] / regionPoints.Length;
         }
 
         verts[regionPoints.Length] = avg;
+        UVs[regionPoints.Length] = new Vector2(avg.x, avg.z);
         int centerVertInd = regionPoints.Length;
 
         for (int i = 0; i < regionPoints.Length; i++)
@@ -59,6 +62,7 @@ public class BoundaryBuilder
         }
         Mesh mesh = new Mesh();
         mesh.vertices = verts;
+        mesh.uv = UVs;
         mesh.triangles = tris;
         mesh.RecalculateNormals();
         mesh.RecalculateBounds();

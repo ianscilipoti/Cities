@@ -20,13 +20,13 @@ public class CityEdge : EdgeLoopEdge
     {
         if (depth == 1)
         {
-            return new System.Object[] { CityEdgeType.LandPath, 6f };
+            return new System.Object[] { CityEdgeType.LandPath, 8f };
         }
         if (depth == 2)
         {
-            return new System.Object[] { CityEdgeType.LandPath, 3f };
+            return new System.Object[] { CityEdgeType.LandPath, 6f };
         }
-        return new System.Object[] { CityEdgeType.LandPath, 2f };
+        return new System.Object[] { CityEdgeType.LandPath, 4f };
     }
 
     public CityEdgeType GetRoadType ()

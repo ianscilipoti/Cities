@@ -38,6 +38,9 @@ public class EdgeLoop<EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopEd
         return minDist;
     }
 
+    //Note from 2025: this function makes some assumptions that aren't ideal. Particularly, it assume that the graph of edges it's exploring contains no dead ends.
+    //While in this program's context, this shouldn't happen, this is still not good design. 
+
     public List<EdgeType> GetLocalLoop(EdgeType startingEdge, bool ccw)
     {
         List<EdgeType> foundEdges = new List<EdgeType>();
@@ -57,7 +60,7 @@ public class EdgeLoop<EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopEd
 
             if (lastVertex.NumConnections() <= 1)
             {
-                Debug.LogWarning("Reached end of loop while collecting loop.");
+                Debug.LogWarning("Reached end of chain while collecting loop.");
                 return null;
             }
 
@@ -89,6 +92,7 @@ public class EdgeLoop<EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopEd
                         Debug.LogWarning("Could not isolate loop because connected edges were not EdgeLoopEdges");
                     }
                 }
+                //some protection against infinite loops
                 edgesSeen++;
                 if (edgesSeen > MAXLOOPSIZE)
                 {
@@ -100,6 +104,12 @@ public class EdgeLoop<EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopEd
                     }
                     return null;
                 }
+            }
+
+            if (minAngleEdge == null)
+            {
+                Debug.LogWarning($"No valid edge found at vertex {lastVertex.pt}");
+                return null;
             }
 
             foundEdges.Add(minAngleEdge);
@@ -119,6 +129,8 @@ public class EdgeLoop<EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopEd
         return foundEdges;
     }
 
+
+    //generate new Edgeloop given a list of points 
     public EdgeLoop(Vector2[] points, ILinkedGraphEdgeFactory<EdgeType> factory, Object[] factoryParams)
     {
         LinkedGraphVertex[] verts = new LinkedGraphVertex[points.Length];
@@ -146,6 +158,7 @@ public class EdgeLoop<EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopEd
         }
     }
 
+    //generate a polygonal loop of edges 
     public static EdgeType[] GetPolygonEdges(int sides, float radius, float radiusRandomness, float randomnessRangeDetail, ILinkedGraphEdgeFactory<EdgeType> factory, System.Object[] factoryParams)
     {
         LinkedGraphVertex[] verts = new LinkedGraphVertex[sides];
@@ -281,13 +294,6 @@ public class EdgeLoop<EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopEd
         {
             return false;
         }
-
-        //if ((poly.PermiterContainsPoint(theEdge.a.pt, Segment.defaultAccuracy*2) || poly.ContainsPoint(theEdge.a.pt)) &&
-        //    (poly.PermiterContainsPoint(theEdge.b.pt, Segment.defaultAccuracy*2) || poly.ContainsPoint(theEdge.b.pt)))
-        //{
-        //    return true;
-        //}
-        //return false;
     }
 
     public static bool IsEqual (EdgeLoop<EdgeType> a, EdgeLoop<EdgeType> b)

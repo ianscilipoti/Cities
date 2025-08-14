@@ -10,7 +10,7 @@ public class City : CityRegion
     public Vector2 entrence;
     public TextureSampler terrainGenerator;
 
-    public static float MINSUBDIVAREA = 1000f;
+    public static float MINSUBDIVAREA = 2500f;
 
     private List<CityEdge> foundEdgesCache;
 
@@ -21,10 +21,10 @@ public class City : CityRegion
     public City (CityEdge[] boundaryLoop) : base(boundaryLoop, null, true, 1) 
     {
         entrence = Vector2.zero;
-        terrainGenerator = new TerrainGenerator(120f, 30f);
+        terrainGenerator = new TerrainGenerator(120f, 60f);
         cityParent = new GameObject("CityParent", typeof(Transform)).transform;
     }
-
+    
     public float SampleElevation (float x, float z)
     {
         return terrainGenerator.get(x, z);
@@ -46,7 +46,8 @@ public class City : CityRegion
         int pass = 0;
         bool allGenerated = false;
 
-        //after pass1, generate clipping for roads
+        //pass 0: subdivide the City instance into a series of blocks, recursivly subdivide these blocks until all have been subdivided into a plot
+        //after pass 1, generate clipping for roads
 
         while (!allGenerated)
         {
@@ -55,22 +56,6 @@ public class City : CityRegion
             {
                 pass++;
             }
-
-            //switch (pass)
-            //{
-            //    case (1):
-            //        List<CityEdge> allEdges = city.GetAllEdges();
-            //        foreach (CityEdge edge in allEdges)
-            //        {
-            //            //edge.width = Random.value + 1.5f;
-            //            BoundaryBuilder builder = new BoundaryBuilder(edge, city, null);
-            //            builder.PlaceBoundary();
-            //        }
-            //        break;
-
-            //    case (2):
-            //        break;
-            //}
 
             if (pass > MAXPASSES)
             {
@@ -81,9 +66,6 @@ public class City : CityRegion
         Debug.Log("Finished generating in " + (Time.realtimeSinceStartup - startTime) + " seconds using " + (pass+1) + " passes.");
 
         Debug.Log("City is verified (" + city.VerifyRecursive() + ")");
-
-
-
 
         return city;
     }
@@ -106,9 +88,9 @@ public class City : CityRegion
         return Color.red;
     }
 
+    //Cities always subdivide into Block instances. Blocks are the generic term for a section of the city
     public override SubdividableEdgeLoop<CityEdge> GetNextChild (CityEdge[] edges) 
     {
-        //new Plot(edges, this, depth+1);//
         return new Block(edges, this, depth+1);
     }
 

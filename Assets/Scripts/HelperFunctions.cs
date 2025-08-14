@@ -30,6 +30,11 @@ public class HelperFunctions
         return p;
     }
 
+    public void GetPolygonTriangles ()
+    {
+        
+    }
+
     public static Rect GetOrientedBounds (List<Vector2> points, ref float relativeAngle)
     {
         float maxLength = 0f;

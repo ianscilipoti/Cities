@@ -25,9 +25,10 @@ public class SubdividableEdgeLoop<EdgeType> : EdgeLoop<EdgeType>, Subdividable w
         return children.ToArray();
     }
 
+    //all SubdividableEdgeLoops must have a SubDivScheme. There are many ways to subdivide a shape. We cannot subdivide without knowing what subidivion to use. 
     public virtual ISubDivScheme<SubdividableEdgeLoop<EdgeType>> GetDivScheme()
     {
-        return null;//new GetPieSections();
+        return null;
     }
 
     public virtual SubdividableEdgeLoop<EdgeType> GetNextChild(EdgeType[] edges)
@@ -63,6 +64,9 @@ public class SubdividableEdgeLoop<EdgeType> : EdgeLoop<EdgeType>, Subdividable w
         }
         return true;
     }
+
+    //Given a parent edge loop, find all loops that are geometrically contained within this parent loop. Do this by finding all connected edges within the perimeter,
+    //Then, find loops that may involve the cw and ccw directions of each contained child edge
 
     public List<EdgeType[]> GetInteriorEdgeLoops()
     {
@@ -179,24 +183,9 @@ public class SubdividableEdgeLoop<EdgeType> : EdgeLoop<EdgeType>, Subdividable w
         }
 	}
 
-    //public void SubdivideRecursive ()
-    //{
-    //    if (!IsSubdividable())
-    //    {
-    //        return;
-    //    }
-    //    if (Subdivide())
-    //    {
-    //        foreach (SubdividableEdgeLoop child in children)
-    //        {
-    //            child.SubdivideRecursive();
-    //        } 
-    //    }
-    //}
-
-    public void DebugDrawRecursive (float strength)
+    public void DebugDrawRecursive (float strength, int depth)
     {
-        if (children.Count == 0)
+        if (children.Count == 0 || depth == 0)
         {
             Color drawCol = getDebugColor();
 
@@ -216,9 +205,14 @@ public class SubdividableEdgeLoop<EdgeType> : EdgeLoop<EdgeType>, Subdividable w
             Debug.DrawLine(HelperFunctions.projVec2(GetPolygon().centroid), HelperFunctions.projVec2(GetPolygon().centroid) + Vector3.up * 0.1f, drawCol);
         }
 
+        if (depth == 0)
+        {
+            return;
+        }
+
         foreach (var child in children)
         {
-            child.DebugDrawRecursive(strength);
+            child.DebugDrawRecursive(strength, depth-1);
         }
     }
 }

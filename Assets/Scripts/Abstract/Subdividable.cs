@@ -13,17 +13,4 @@ public interface Subdividable
 
     bool IsSubdivided();
 
-    //public virtual void SubdivideR()
-    //{
-    //    if (!isSubdividable)
-    //    {
-    //        return;
-    //    }
-    //    Subdivide();
-    //    Subdividable[] childrenSubReg = getChildren();
-    //    for (int i = 0; i < childrenSubReg.Length; i++)
-    //    {
-    //        childrenSubReg[i].SubdivideR();
-    //    }
-    //}
 }

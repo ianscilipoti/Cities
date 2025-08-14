@@ -89,36 +89,6 @@ public class CitySkeleton : EdgeLoopSubdivider<CityEdge>//ISubDivScheme <Subdivi
             dividingEdges.Add(new DividingEdge(a, b, factory, factoryParams));
         }
 
-
-
-
-        //get vertices as list
-        //ICollection<TriangleNet.Geometry.Vertex> vertices = mesh.Vertices;
-        //TriangleNet.Geometry.Vertex[] vertexList = new TriangleNet.Geometry.Vertex[vertices.Count];
-        //vertices.CopyTo(vertexList, 0);
-        //IEnumerable<TriangleNet.Geometry.Edge> meshEdges = mesh.Edges;
-
-
-        //build a list of dividing edges and pass it to the child collector
-
-
-        //foreach (TriangleNet.Geometry.Edge edge in meshEdges) {
-        //    //if (vertConnections[edge.P0] > 4)
-        //    //{
-        //    //    vertConnections[edge.P0]--;
-        //    //    continue;
-        //    //}
-        //    //if (vertConnections[edge.P1] > 4)
-        //    //{
-        //    //    vertConnections[edge.P1]--;
-        //    //    continue;
-        //    //}
-        //    Vector2 a = new Vector2((float)vertexList[edge.P0].X, (float)vertexList[edge.P0].Y);
-        //    Vector2 b = new Vector2((float)vertexList[edge.P1].X, (float)vertexList[edge.P1].Y);
-
-        //    dividingEdges.Add(new DividingEdge(a, b, factory, CityEdgeType.LandPath));
-        //}
-
         return CollectChildren(parent, dividingEdges);
     }
 
