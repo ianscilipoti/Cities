@@ -17,8 +17,12 @@ Built on top of the Linked Graph, is a concept of edge loops. Edge loops represe
 
 The core generation loop happens in stages within the City class. At each stage, the city is recursively subdivided until all subdivision at a certain stage is complete. The stages are: 0: primary city structure and blocks, 1: plots (parks and non-parks), and 2: the final building footprints, with space carved out for roads. 
 
+Different city regions have implement subdivision differently, allowing for flexible changes to the city layout and structure. 
+
 While I believe in this structure for the most part, it certainly has limitation. In some cases, this codebase can also feel a little overengineered. Be warned. 
 
 **AI**
 
-I have recently endeavored to add some AI features to this project. My idea was to allow users to walk around the city streets and meet AI avatars in the houses. These avatars would have simulated conversations and interactions with eachother. By walking around, you can learn about the social networks and gossip of the city. This feature is not complete, but the groundwork is there. The AI folder contains code for calling GPT-5-nano, parsing results, and storing them in a data structure called TownSimulation. The TownSimulation class has functionality to allow for two of its residents to encounter, and for an overview of their encounter to be added to their respective knowledge bases.   
+I have recently endeavored to add some AI features to this project. My idea was to allow users to walk around the city streets and meet AI avatars in the houses. These avatars would have simulated conversations and interactions with eachother. By walking around, you can learn about the social networks and gossip of the city. This feature is now working at a MVP level. 
+
+The AI folder contains code for calling GPT-5-nano, parsing results, and storing them in a data structure called TownSimulation. The TownSimulation class has functionality to allow for two of its residents to encounter, and for an overview of their encounter to be added to their respective knowledge bases. Additionally, this class supports save/load from json and batch simulation. 
