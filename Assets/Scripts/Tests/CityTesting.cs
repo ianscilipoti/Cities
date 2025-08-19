@@ -21,10 +21,8 @@ public class CityTesting : MonoBehaviour
         {
             seed = Random.Range(0, 100000);
         }
-       
-        Random.InitState(seed);
 
-        city = City.GenerateCity(radius);
+        city = City.GenerateCity(radius, seed);
 
     }
 
@@ -44,9 +42,9 @@ public class CityTesting : MonoBehaviour
             }
 
             refresh = false;
-            Random.InitState(seed);
+            //Random.InitState(seed);
             Destroy(city.cityParent.gameObject);
-            city = City.GenerateCity(radius);
+            city = City.GenerateCity(radius, seed);
 
         }
         if (showRoads)

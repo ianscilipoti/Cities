@@ -146,6 +146,8 @@ public class GetBuildablePlot : EdgeLoopSubdivider<CityEdge>
 
             List<SubdividableEdgeLoop<CityEdge>> children = new List<SubdividableEdgeLoop<CityEdge>>();
 
+            bool firstRoad = false;
+
             for (int i = 0; i < formedChildRegions.Count; i ++)
             {
                 CityEdge[] loop = formedChildRegions[i];
@@ -163,7 +165,15 @@ public class GetBuildablePlot : EdgeLoopSubdivider<CityEdge>
                 }
                 else
                 {
-                    children.Add(new Road(loop, city));
+                    if (parent is Plot)
+                    {
+                        children.Add(new Road(loop, city, (Plot)parent, !firstRoad));
+                    }
+                    else
+                    {
+                        children.Add(new Road(loop, city, null, !firstRoad));
+                    }
+                    firstRoad = true;
                 }
             }
 

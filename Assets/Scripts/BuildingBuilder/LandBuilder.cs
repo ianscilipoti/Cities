@@ -21,9 +21,10 @@ public class LandBuilder
 
     public void PlaceLand()
     {
-        GameObject buildingObject = new GameObject("LandPlot", typeof(MeshRenderer), typeof(MeshFilter));
+        GameObject buildingObject = new GameObject("LandPlot", typeof(MeshRenderer), typeof(MeshFilter), typeof(MeshCollider));
         Mesh mesh = GetMesh();
         buildingObject.GetComponent<MeshFilter>().mesh = mesh;
+        buildingObject.GetComponent<MeshCollider>().sharedMesh = mesh;
         buildingObject.GetComponent<MeshRenderer>().sharedMaterial = Resources.Load<Material>("Materials/Grass");
         buildingObject.transform.parent = city.cityParent;
 

@@ -32,6 +32,15 @@ public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
         return newEdge;
     }
 
+    public static EdgeType AddEdge(EdgeType newEdgeInstance, List<EdgeType> knownEdges)
+    {
+        if (knownEdges != null)
+        {
+            knownEdges.Add(newEdgeInstance);
+        }
+        return newEdgeInstance;
+    }
+
     public static void DebugDraw(List<EdgeType> edges)
     {
         DebugDraw(edges, null, null);
@@ -112,8 +121,11 @@ public class LinkedGraph<EdgeType> where EdgeType : LinkedGraphEdge
         LinkedGraphVertex aVert = edge.a;
         LinkedGraphVertex bVert = edge.b;
 
-        EdgeType aEdge = AddEdge(aVert, midPoint, edgeFactory, null, knownEdges);
-        EdgeType bEdge = AddEdge(midPoint, bVert, edgeFactory, null, knownEdges);
+        EdgeType aEdge = AddEdge(edgeFactory.GetEdgeFromParent(aVert, midPoint, null, edge), knownEdges);
+        EdgeType bEdge = AddEdge(edgeFactory.GetEdgeFromParent(midPoint, bVert, null, edge), knownEdges);
+
+        //EdgeType aEdge = AddEdge(aVert, midPoint, edgeFactory, null, knownEdges);
+        //EdgeType bEdge = AddEdge(midPoint, bVert, edgeFactory, null, knownEdges);
 
         edge.OnEdgeSplit(aEdge, bEdge);
 

@@ -4,7 +4,7 @@ using UnityEngine;
 using EPPZ.Geometry.Model;
 
 //should be a ccw loop of edges
-public class EdgeLoop<EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopEdge
+public class EdgeLoop<EdgeType> : IEdgeSplitListener, IEdgeLoop where EdgeType : EdgeLoopEdge
 {
     protected List<EdgeType> edges;
     private Rect bounds;
@@ -24,6 +24,7 @@ public class EdgeLoop<EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopEd
         foreach (EdgeType edge in edges)
         {
             edge.AddEdgeSplitListener(this);
+            edge.AddAdjacentLoop(this);
         }
     }
 
@@ -427,6 +428,17 @@ public class EdgeLoop<EdgeType> : IEdgeSplitListener where EdgeType : EdgeLoopEd
     public Polygon GetPolygon()
     {
         return new Polygon(GetPoints());
+    }
+
+    public string GetHash ()
+    {
+        Vector2[] points = GetPoints();
+        string res = "";
+        foreach(Vector2 p in points)
+        {
+            res += new Vector2(Mathf.FloorToInt(p.x), Mathf.FloorToInt(p.y)).ToString();
+        }
+        return res;
     }
 
     public void EnumerateEdges (System.Action<EdgeLoopEdge> action)

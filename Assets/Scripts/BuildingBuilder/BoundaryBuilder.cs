@@ -25,9 +25,10 @@ public class BoundaryBuilder
 
     public void PlaceBoundary()
     {
-        GameObject buildingObject = new GameObject("Boundary", typeof(MeshRenderer), typeof(MeshFilter));
+        GameObject buildingObject = new GameObject("Boundary", typeof(MeshRenderer), typeof(MeshFilter), typeof(MeshCollider));
         Mesh mesh = GetMesh();
         buildingObject.GetComponent<MeshFilter>().mesh = mesh;
+        buildingObject.GetComponent<MeshCollider>().sharedMesh = mesh;
         buildingObject.GetComponent<MeshRenderer>().sharedMaterial = Resources.Load<Material>("Materials/Road");
         buildingObject.transform.parent = city.cityParent;
     }

@@ -72,9 +72,10 @@ public class Building
 
     public void PlaceBuilding()
     {
-        GameObject buildingObject = new GameObject("Building", typeof(MeshRenderer), typeof(MeshFilter));
+        GameObject buildingObject = new GameObject("Building", typeof(MeshRenderer), typeof(MeshFilter), typeof(MeshCollider));
         Mesh mesh = GetMesh();
         buildingObject.GetComponent<MeshFilter>().mesh = mesh;
+        buildingObject.GetComponent<MeshCollider>().sharedMesh = mesh;
         buildingObject.GetComponent<MeshRenderer>().sharedMaterial = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat");
         buildingObject.transform.parent = city.cityParent;
     }

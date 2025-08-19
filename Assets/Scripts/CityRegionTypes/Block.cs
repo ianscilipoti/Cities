@@ -45,7 +45,7 @@ public class Block : CityRegion
         //return new Park(edges, rootCity);
         Polygon polygonTemplate = GetPolygon();
         float childArea = Mathf.Abs(polygonTemplate.area);
-        float parkChance = 0.025f;
+        float parkChance = 0.2f;
         if (Random.value < parkChance)
         {
             return new Plot(edges, rootCity, true, depth + 1);

@@ -18,10 +18,13 @@ public class City : CityRegion
 
     public Transform cityParent;
 
+    TownSimulation town;
+    public Dictionary<Plot, TownResident> plotResidentMapping;
+
     public City (CityEdge[] boundaryLoop) : base(boundaryLoop, null, true, 1) 
     {
         entrence = Vector2.zero;
-        terrainGenerator = new TerrainGenerator(120f, 30f);
+        terrainGenerator = new TerrainGenerator(120f, 5f);
         cityParent = new GameObject("CityParent", typeof(Transform)).transform;
     }
     
@@ -36,8 +39,13 @@ public class City : CityRegion
     }
 
     //entry point of all generation. We excecute passes until all children are generated
-    public static City GenerateCity (float radius) 
+    //this is a static method instead of a constructor because the constructor needs to call the base with the
+    //parameter argument. However, I don't want to ask that a the caller always generate this. This is one of the setbacks
+    //of all of the inheritence 
+    public static City GenerateCity (float radius, int seed) 
     {
+        Random.InitState(seed);
+
         CityEdgeFactory factory = new CityEdgeFactory();
         CityEdge[] edges = GetPolygonEdges(20, radius, radius/2, 70f, factory, new System.Object[]{ CityEdgeType.Wall, 5.55f});
         City city = new City(edges);
@@ -47,7 +55,7 @@ public class City : CityRegion
         bool allGenerated = false;
 
         //pass 0: subdivide the City instance into a series of blocks, recursivly subdivide these blocks until all have been subdivided into a plot
-        //after pass 1, generate clipping for roads
+        //after pass 1, subdivide plots into buildings and road segments 
 
         while (!allGenerated)
         {
@@ -57,11 +65,73 @@ public class City : CityRegion
                 pass++;
             }
 
-            //calculate neighbors
+            //calculate neighbors and town stuff
             if (pass == 1)
             {
-                var neighborMap = city.BuildNeighborMap();
-                Debug.Log($"Computed neighbor map for {neighborMap.Count} non-park plots");
+                List<Plot> plots = city.GetPlots();
+                city.plotResidentMapping = new Dictionary<Plot, TownResident>();
+
+
+                if (TownSimulation.HasSaveFile(seed))
+                {
+                    try
+                    {
+                        city.town = new TownSimulation(seed);
+
+                        foreach (Plot plot in plots)
+                        {
+                            city.plotResidentMapping.Add(plot, city.town.residents[plot.GetHash()]);
+                        }
+
+                        Debug.Log("loaded from file successfully");
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogError("tried to load city residen data but failed: " + e);
+                    }
+                }
+                else //calculate new residents etc
+                {
+                    city.plotResidentMapping = new Dictionary<Plot, TownResident>();
+                    List<TownResident> residents = new List<TownResident>();
+
+                    //for each edge of each city plot, mark that this plot is adjacent to this edge
+                    //ideally there should be some adjacency list in the CityEdge, this is ok for now
+                    foreach (Plot plot in plots)
+                    {
+                        TownResident resident = new TownResident(plot.GetHash());
+                        residents.Add(resident);
+                        city.plotResidentMapping.Add(plot, resident);
+                    }
+                    int maxLoops = 0;
+                    int numNoNeighbor = 0;
+                    foreach (Plot plot in plots)
+                    {
+                        CityEdge[] plotEdges = plot.GetEdges();
+                        bool hasPlotNeighbor = false;
+                        foreach (CityEdge edge in plotEdges)
+                        {
+                            List<IEdgeLoop> neighbors = edge.GetAdjacentLoops();
+                            foreach (IEdgeLoop neighborLoop in neighbors)
+                            {
+                                if (neighborLoop is Plot && neighborLoop != plot)
+                                {
+                                    hasPlotNeighbor = true;
+                                    city.plotResidentMapping[plot].neighborHashes.Add(city.plotResidentMapping[(Plot)neighborLoop].hash);
+                                }
+                            }
+                            maxLoops = Mathf.Max(maxLoops, neighbors.Count);
+                        }
+
+                        if (!hasPlotNeighbor)
+                        {
+                            numNoNeighbor++;
+                        }
+                    }
+
+                    city.town = new TownSimulation(residents, seed);
+                    city.town.simulateTown(150);
+                }
             }
 
             if (pass > MAXPASSES)
@@ -131,52 +201,6 @@ public class City : CityRegion
             }
         }
     }
-
-	// Build neighbor dictionary mapping non-park BuildablePlot to list of adjacent non-park BuildablePlots
-	public Dictionary<BuildablePlot, List<BuildablePlot>> BuildNeighborMap()
-	{
-		var allBuildable = new List<BuildablePlot>();
-		CollectBuildablePlotsRecursive(this, allBuildable);
-
-		// Build edge -> plots map to find adjacency via shared CityEdge references
-		var edgeToPlots = new Dictionary<CityEdge, List<BuildablePlot>>();
-		foreach (var plot in allBuildable)
-		{
-			foreach (var edge in plot.GetEdges())
-			{
-				var cityEdge = edge as CityEdge;
-				if (cityEdge == null) continue;
-				if (!edgeToPlots.TryGetValue(cityEdge, out var list))
-				{
-					list = new List<BuildablePlot>(2);
-					edgeToPlots[cityEdge] = list;
-				}
-				if (!list.Contains(plot)) list.Add(plot);
-			}
-		}
-
-		var neighbors = new Dictionary<BuildablePlot, List<BuildablePlot>>();
-		foreach (var plot in allBuildable)
-		{
-			if (plot.IsPark) continue; // skip parks as keys
-			var set = new HashSet<BuildablePlot>();
-			foreach (var edge in plot.GetEdges())
-			{
-				var cityEdge = edge as CityEdge;
-				if (cityEdge == null) continue;
-				if (edgeToPlots.TryGetValue(cityEdge, out var list))
-				{
-					foreach (var other in list)
-					{
-						if (other != plot && !other.IsPark) set.Add(other);
-					}
-				}
-			}
-			neighbors[plot] = new List<BuildablePlot>(set);
-		}
-
-		return neighbors;
-	}
 
 	private void CollectBuildablePlotsRecursive(SubdividableEdgeLoop<CityEdge> node, List<BuildablePlot> storage)
 	{

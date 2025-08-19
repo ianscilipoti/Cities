@@ -5,4 +5,6 @@ using UnityEngine;
 public interface ILinkedGraphEdgeFactory <EdgeType> where EdgeType : LinkedGraphEdge
 {
     EdgeType GetEdge (LinkedGraphVertex a, LinkedGraphVertex b, System.Object[] data);
+
+    EdgeType GetEdgeFromParent (LinkedGraphVertex a, LinkedGraphVertex b, System.Object[] data, EdgeType parent);
 }

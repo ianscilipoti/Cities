@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class NewMonoBehaviour : MonoBehaviour
 {
@@ -12,7 +13,7 @@ public class NewMonoBehaviour : MonoBehaviour
     async void RunTest()
     {
         Debug.Log("Has OPENAI_API_KEY: " + !string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable("OPENAI_API_KEY")));
-        TownSimulation sim = new TownSimulation(2);
-        bool res = await sim.simulateInteraction();
+        //TownSimulation sim = new TownSimulation(2);
+        //Dictionary<TownResident, string> res = await sim.simulateInteraction();
     }
 }

@@ -51,6 +51,10 @@ public class CitySkeleton : EdgeLoopSubdivider<CityEdge>//ISubDivScheme <Subdivi
                 }
             } 
         }
+
+        pointsOfInterest.Add(new RoadDestination(centroid, 0, false, false));
+
+
         pointsOfInterest.Add(new RoadDestination(bounds.center + new Vector2(bounds.width * 100, bounds.height * 100), 0, false, false)); 
         pointsOfInterest.Add(new RoadDestination(bounds.center + new Vector2(bounds.width * 100, -bounds.height * 100), 0, false, false)); 
         pointsOfInterest.Add(new RoadDestination(bounds.center + new Vector2(-bounds.width * 100, -bounds.height * 100), 0, false, false)); 
